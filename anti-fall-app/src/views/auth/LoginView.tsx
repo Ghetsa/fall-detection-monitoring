@@ -22,14 +22,14 @@ export default function LoginView() {
     try {
       setLoading(true);
 
-      await loginWithEmail({
+      const result = await loginWithEmail({
         email: form.email,
         password: form.password,
       });
 
       alert('Login berhasil.');
 
-      router.push('/customer/dashboard');
+      router.push(result.redirectTo);
     } catch (err: any) {
       console.error(err);
       setError(err.message || 'Email atau password salah.');
@@ -102,7 +102,11 @@ export default function LoginView() {
 
               {error ? <p style={styles.errorText}>{error}</p> : null}
 
-              <button type="submit" style={styles.primaryButton} disabled={loading}>
+              <button
+                type="submit"
+                style={styles.primaryButton}
+                disabled={loading}
+              >
                 {loading ? 'Loading...' : 'Login'}
               </button>
             </form>

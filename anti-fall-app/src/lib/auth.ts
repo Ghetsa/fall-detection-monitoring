@@ -3,6 +3,7 @@ import {
   signInWithEmailAndPassword,
   deleteUser,
   updateProfile,
+  signOut,
 } from 'firebase/auth';
 import {
   doc,
@@ -16,12 +17,18 @@ type RegisterPayload = {
   fullName: string;
   email: string;
   password: string;
-  role?: string;
+  role?: 'admin' | 'customer';
 };
 
 type LoginPayload = {
   email: string;
   password: string;
+};
+
+type LoginResult = {
+  userCredential: any;
+  role: 'admin' | 'customer';
+  redirectTo: string;
 };
 
 export async function registerWithEmail({
@@ -76,12 +83,31 @@ export async function registerWithEmail({
 export async function loginWithEmail({
   email,
   password,
-}: LoginPayload) {
+}: LoginPayload): Promise<LoginResult> {
   const userCredential = await signInWithEmailAndPassword(
     auth,
     email,
     password
   );
 
-  return userCredential;
+  const user = userCredential.user;
+  const userRef = doc(db, 'users', user.uid);
+  const userSnap = await getDoc(userRef);
+
+  let role: 'admin' | 'customer' = 'customer';
+
+  if (userSnap.exists()) {
+    const userData = userSnap.data();
+    role = userData.role === 'admin' ? 'admin' : 'customer';
+  }
+
+  return {
+    userCredential,
+    role,
+    redirectTo: role === 'admin' ? '/admin/dashboard' : '/customer/dashboard',
+  };
+}
+
+export async function logoutUser() {
+  await signOut(auth);
 }

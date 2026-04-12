@@ -1,0 +1,217 @@
+import Link from 'next/link';
+import { useRouter } from 'next/router';
+import { CSSProperties } from 'react';
+
+import {
+  LayoutDashboard,
+  MapPin,
+  FileText,
+  Siren,
+  Bell,
+} from 'lucide-react';
+
+const menuItems = [
+  { label: 'Dashboard', href: '/customer/dashboard', icon: LayoutDashboard },
+  { label: 'Tracking', href: '/customer/tracking', icon: MapPin },
+  { label: 'Logs', href: '/customer/logs', icon: FileText },
+  { label: 'Emergency', href: '/customer/emergency', icon: Siren },
+  { label: 'Notifications', href: '/customer/notifications', icon: Bell },
+];
+
+type CustomerSidebarProps = {
+  isMobile?: boolean;
+  collapsed?: boolean;
+  onToggle?: () => void;
+};
+
+export default function CustomerSidebar({
+  isMobile = false,
+  collapsed = false,
+  onToggle,
+}: CustomerSidebarProps) {
+  const router = useRouter();
+
+  return (
+    <>
+      <aside
+        style={{
+          ...styles.sidebar,
+          ...(collapsed ? styles.sidebarCollapsed : {}),
+        }}
+      >
+        {!collapsed && (
+          <div style={styles.inner}>
+            {/* Top section */}
+            <div>
+              <div style={styles.brandBox}>
+                <div style={styles.logo}>A</div>
+                <div>
+                  <p style={styles.brandName}>Anti Fall App</p>
+                  <p style={styles.brandSubtext}>Customer Panel</p>
+                </div>
+              </div>
+
+              <nav style={styles.nav}>
+                {menuItems.map((item) => {
+                  const isActive = router.pathname === item.href;
+                  const Icon = item.icon;
+
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      style={{
+                        ...styles.link,
+                        ...(isActive ? styles.activeLink : {}),
+                      }}
+                    >
+
+                      <span style={styles.icon}>
+                        <Icon size={18} strokeWidth={2} />
+                      </span>
+
+                      <span>{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </nav>
+            </div>
+
+            {/* Footer */}
+            <div style={styles.footerBox}>
+              <p style={styles.footerTitle}>Status Device</p>
+              <p style={styles.footerText}>Online</p>
+              <p style={styles.footerSmall}>Last update: 2 menit lalu</p>
+            </div>
+          </div>
+        )}
+      </aside>
+    </>
+  );
+}
+
+const styles: Record<string, CSSProperties> = {
+  sidebar: {
+    width: '260px',
+    minHeight: '100vh',
+    background: 'linear-gradient(180deg, #0f172a 0%, #1e3a8a 100%)',
+    color: '#ffffff',
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    bottom: 0,
+    zIndex: 100,
+    transition: 'all 0.25s ease',
+    overflow: 'hidden',
+  },
+
+  sidebarCollapsed: {
+    width: '0',
+    padding: '0',
+  },
+
+  inner: {
+    height: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+    padding: '20px 14px',
+  },
+
+  brandBox: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    marginBottom: '24px',
+  },
+
+  logo: {
+    width: '46px',
+    height: '46px',
+    borderRadius: '14px',
+    backgroundColor: '#ffffff',
+    color: '#1d4ed8',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontWeight: 800,
+    fontSize: '20px',
+  },
+
+  brandName: {
+    margin: 0,
+    fontSize: '18px',
+    fontWeight: 800,
+  },
+
+  brandSubtext: {
+    margin: '4px 0 0',
+    fontSize: '13px',
+    color: 'rgba(255,255,255,0.8)',
+  },
+
+  nav: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '10px',
+  },
+
+  link: {
+    textDecoration: 'none',
+    color: 'rgba(255,255,255,0.9)',
+    padding: '14px 16px',
+    borderRadius: '14px',
+    fontWeight: 600,
+    fontSize: '15px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    transition: '0.2s ease',
+  },
+
+  activeLink: {
+    backgroundColor: '#ffffff',
+    color: '#1e3a8a',
+  },
+
+  icon: {
+    width: '20px',
+    height: '20px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  iconImage: {
+    width: '18px',
+    height: '18px',
+    objectFit: 'contain',
+    filter: 'invert(1)', // bikin putih di background gelap
+    opacity: 0.9,
+  },
+
+  footerBox: {
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    padding: '16px',
+    borderRadius: '16px',
+  },
+
+  footerTitle: {
+    margin: 0,
+    fontSize: '14px',
+    fontWeight: 700,
+  },
+
+  footerText: {
+    margin: '8px 0 4px',
+    fontSize: '22px',
+    fontWeight: 800,
+  },
+
+  footerSmall: {
+    margin: 0,
+    fontSize: '12px',
+    color: 'rgba(255,255,255,0.82)',
+  },
+
+};
