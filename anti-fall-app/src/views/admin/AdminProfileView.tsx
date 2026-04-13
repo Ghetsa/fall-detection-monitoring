@@ -1,6 +1,5 @@
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
-import { toast } from 'react-toastify';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import {
   User,
@@ -14,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { getUserById, saveUserProfile } from '../../services/userService';
+import { showErrorAlert, showSuccessAlert } from '../../lib/alerts';
 
 export default function AdminProfileView() {
   const { user, loading: authLoading } = useAuth();
@@ -63,10 +63,10 @@ export default function AdminProfileView() {
         role: 'admin',
         photoURL: photoURL || '/images/logo.png',
       });
-      toast.success('Profile admin berhasil disimpan.');
+      await showSuccessAlert('Profile admin berhasil disimpan');
     } catch (error) {
       console.error('Gagal menyimpan profile admin:', error);
-      toast.error('Profile admin gagal disimpan.');
+      await showErrorAlert('Profile admin gagal disimpan');
     } finally {
       setSaving(false);
     }

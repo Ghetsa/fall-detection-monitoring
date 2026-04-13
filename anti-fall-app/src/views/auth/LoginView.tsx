@@ -2,8 +2,8 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { FormEvent, useState } from 'react';
-import { toast } from 'react-toastify';
 import { loginWithEmail } from '../../lib/auth';
+import { showErrorAlert, showSuccessAlert } from '../../lib/alerts';
 
 export default function LoginView() {
   const router = useRouter();
@@ -28,14 +28,14 @@ export default function LoginView() {
         password: form.password,
       });
 
-      toast.success('Login berhasil.');
+      await showSuccessAlert('Login berhasil');
 
       router.push(result.redirectTo);
     } catch (err: any) {
       console.error(err);
       const message = err.message || 'Email atau password salah.';
       setError(message);
-      toast.error(message);
+      await showErrorAlert('Login gagal', message);
     } finally {
       setLoading(false);
     }

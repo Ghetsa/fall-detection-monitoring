@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { toast } from 'react-toastify';
 import DashboardLayout from '../../components/layout/DashboardLayout';
+import { showSuccessAlert } from '../../lib/alerts';
 import {
   Settings,
   Bell,
@@ -18,7 +18,7 @@ export default function AdminSettingsView() {
   const [autoIncidentReport, setAutoIncidentReport] = useState(true);
 
   const handleSave = () => {
-    toast.success('Pengaturan berhasil disimpan.');
+    void showSuccessAlert('Pengaturan berhasil disimpan');
   };
 
   return (

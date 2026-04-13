@@ -31,6 +31,21 @@ type LoginResult = {
   redirectTo: string;
 };
 
+function setAuthCookies(role: 'admin' | 'customer') {
+  if (typeof document === 'undefined') return;
+
+  const maxAge = 60 * 60 * 8;
+  document.cookie = `anti_fall_session=active; Path=/; Max-Age=${maxAge}; SameSite=Lax`;
+  document.cookie = `anti_fall_role=${role}; Path=/; Max-Age=${maxAge}; SameSite=Lax`;
+}
+
+function clearAuthCookies() {
+  if (typeof document === 'undefined') return;
+
+  document.cookie = 'anti_fall_session=; Path=/; Max-Age=0; SameSite=Lax';
+  document.cookie = 'anti_fall_role=; Path=/; Max-Age=0; SameSite=Lax';
+}
+
 export async function registerWithEmail({
   fullName,
   email,
@@ -101,6 +116,8 @@ export async function loginWithEmail({
     role = userData.role === 'admin' ? 'admin' : 'customer';
   }
 
+  setAuthCookies(role);
+
   return {
     userCredential,
     role,
@@ -110,4 +127,5 @@ export async function loginWithEmail({
 
 export async function logoutUser() {
   await signOut(auth);
+  clearAuthCookies();
 }

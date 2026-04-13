@@ -2,8 +2,8 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { FormEvent, useState } from 'react';
-import { toast } from 'react-toastify';
 import { registerWithEmail } from '../../lib/auth';
+import { showErrorAlert, showSuccessAlert } from '../../lib/alerts';
 
 export default function RegisterView() {
   const router = useRouter();
@@ -26,7 +26,7 @@ export default function RegisterView() {
     if (form.password !== form.confirmPassword) {
       const message = 'Password dan konfirmasi password tidak sama.';
       setError(message);
-      toast.error(message);
+      void showErrorAlert('Register gagal', message);
       return;
     }
 
@@ -40,13 +40,13 @@ export default function RegisterView() {
         // role: form.role,
       });
 
-      toast.success('Register berhasil.');
+      await showSuccessAlert('Register berhasil');
       router.push('/auth/login');
     } catch (err: any) {
       console.error(err);
       const message = err.message || 'Terjadi kesalahan saat register.';
       setError(message);
-      toast.error(message);
+      await showErrorAlert('Register gagal', message);
     } finally {
       setLoading(false);
     }

@@ -1,12 +1,13 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useEffect, useRef, useState, CSSProperties } from 'react';
+import { useRouter } from 'next/router';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import { toast } from 'react-toastify';
 import { auth, db } from '../../lib/firebase';
 import { logoutUser } from '../../lib/auth';
 import { Menu, X, User as UserIcon, LogOut, ChevronDown } from 'lucide-react';
+import { showErrorAlert, showSuccessAlert } from '../../lib/alerts';
 
 type UserProfile = {
   fullName?: string;
@@ -30,6 +31,7 @@ export default function Navbar({
   title = 'Customer Dashboard',
   subtitle = 'Monitoring lansia secara real-time',
 }: NavbarProps) {
+  const router = useRouter();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -95,10 +97,11 @@ export default function Navbar({
     try {
       await logoutUser();
       setMenuOpen(false);
-      toast.success('Logout berhasil');
+      await showSuccessAlert('Logout berhasil');
+      void router.push('/');
     } catch (error) {
       console.error('Logout gagal:', error);
-      toast.error('Logout gagal');
+      await showErrorAlert('Logout gagal');
     }
   };
 

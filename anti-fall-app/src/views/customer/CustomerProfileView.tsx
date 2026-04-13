@@ -1,6 +1,5 @@
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
-import { toast } from 'react-toastify';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import {
   User,
@@ -13,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { getUserById, saveUserProfile } from '../../services/userService';
+import { showErrorAlert, showSuccessAlert } from '../../lib/alerts';
 
 export default function CustomerProfileView() {
   const { user, loading: authLoading } = useAuth();
@@ -63,10 +63,10 @@ export default function CustomerProfileView() {
         role: 'customer',
         photoURL: photoURL || '/images/logo.png',
       });
-      toast.success('Profile customer berhasil disimpan.');
+      await showSuccessAlert('Profile customer berhasil disimpan');
     } catch (error) {
       console.error('Gagal menyimpan profile customer:', error);
-      toast.error('Profile customer gagal disimpan.');
+      await showErrorAlert('Profile customer gagal disimpan');
     } finally {
       setSaving(false);
     }

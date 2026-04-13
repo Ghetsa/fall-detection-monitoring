@@ -32,3 +32,14 @@ body,
 * {
   box-sizing: border-box;
 }
+
+.swal-popup {
+  border-radius: 20px;
+  font-family: var(--font-sans);
+}
+
+.swal-confirm-button {
+  border-radius: 10px !important;
+  font-weight: 700 !important;
+  padding: 10px 18px !important;
+}
