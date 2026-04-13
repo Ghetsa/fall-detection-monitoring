@@ -16,7 +16,7 @@ const menuItems = [
   { label: 'Incidents', href: '/admin/incidents', icon: TriangleAlert },
   { label: 'Broadcasts', href: '/admin/broadcasts', icon: Megaphone },
   { label: 'Reports', href: '/admin/reports', icon: FileBarChart2 },
-  { label: 'Settings', href: '/admin', icon: Settings },
+  { label: 'Settings', href: '/admin/setting', icon: Settings },
 ];
 
 type AdminSidebarProps = {

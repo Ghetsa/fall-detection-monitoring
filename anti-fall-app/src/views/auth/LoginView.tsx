@@ -234,6 +234,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     border: '1px solid #cbd5e1',
     fontSize: '15px',
     outline: 'none',
+    color: '#334155',
   },
   primaryButton: {
     marginTop: '8px',

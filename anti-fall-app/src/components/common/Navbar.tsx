@@ -1,15 +1,17 @@
 import Link from 'next/link';
-import { useEffect, useState, CSSProperties } from 'react';
+import Image from 'next/image';
+import { useEffect, useRef, useState, CSSProperties } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../../lib/firebase';
 import { logoutUser } from '../../lib/auth';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, User as UserIcon, LogOut, ChevronDown } from 'lucide-react';
 
 type UserProfile = {
   fullName?: string;
   email?: string;
   role?: string;
+  photoURL?: string;
 };
 
 type NavbarProps = {
@@ -30,6 +32,9 @@ export default function Navbar({
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const profileMenuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -52,6 +57,7 @@ export default function Navbar({
             fullName: user.displayName || 'User',
             email: user.email || '',
             role: 'customer',
+            photoURL: user.photoURL || '',
           });
         }
       } catch (error) {
@@ -60,6 +66,7 @@ export default function Navbar({
           fullName: user.displayName || 'User',
           email: user.email || '',
           role: 'customer',
+          photoURL: user.photoURL || '',
         });
       } finally {
         setLoading(false);
@@ -69,15 +76,42 @@ export default function Navbar({
     return () => unsubscribe();
   }, []);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        profileMenuRef.current &&
+        !profileMenuRef.current.contains(event.target as Node)
+      ) {
+        setMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const handleLogout = async () => {
     try {
       await logoutUser();
+      setMenuOpen(false);
       alert('Logout berhasil');
     } catch (error) {
       console.error('Logout gagal:', error);
       alert('Logout gagal');
     }
   };
+
+  const userName = profile?.fullName || currentUser?.displayName || 'User';
+  const userEmail = profile?.email || currentUser?.email || '';
+  const userRole = profile?.role || 'customer';
+
+  const profileRoute =
+    userRole === 'admin' ? '/admin/profile' : '/customer/profile';
+
+  const photoSrc =
+    profile?.photoURL ||
+    currentUser?.photoURL ||
+    '/images/logo-kuceng.png';
 
   return (
     <header
@@ -98,10 +132,7 @@ export default function Navbar({
             ...(isMobile ? styles.leftSectionMobile : {}),
           }}
         >
-          <button
-            onClick={onToggleSidebar}
-            style={styles.menuButton}
-          >
+          <button onClick={onToggleSidebar} style={styles.menuButton}>
             {collapsed ? <Menu size={20} /> : <X size={20} />}
           </button>
 
@@ -132,32 +163,82 @@ export default function Navbar({
           }}
         >
           {!loading && currentUser ? (
-            <>
-              <div
-                style={{
-                  ...styles.userBox,
-                  ...(isMobile ? styles.userBoxMobile : {}),
-                }}
-              >
-                <span style={styles.userName}>
-                  {profile?.fullName || currentUser.displayName || 'User'}
-                </span>
-                <span style={styles.userMeta}>
-                  {profile?.email || currentUser.email}
-                  {profile?.role ? ` • ${profile.role}` : ''}
-                </span>
-              </div>
-
+            <div
+              ref={profileMenuRef}
+              style={{
+                ...styles.profileMenuWrapper,
+                ...(isMobile ? styles.profileMenuWrapperMobile : {}),
+              }}
+            >
               <button
-                onClick={handleLogout}
-                style={{
-                  ...styles.logoutButton,
-                  ...(isMobile ? styles.logoutButtonMobile : {}),
-                }}
+                onClick={() => setMenuOpen((prev) => !prev)}
+                style={styles.profileButton}
+                aria-label="Open profile menu"
               >
-                Logout
+                <span style={styles.profileImageWrap}>
+                  <Image
+                    src={photoSrc}
+                    alt={userName}
+                    width={40}
+                    height={40}
+                    style={styles.profileImage}
+                  />
+                </span>
+
+                {!isMobile && (
+                  <span style={styles.profileInfo}>
+                    <span style={styles.profileName}>{userName}</span>
+                    <span style={styles.profileMeta}>
+                      {userRole} • {userEmail}
+                    </span>
+                  </span>
+                )}
+
+                <span style={styles.chevronWrap}>
+                  <ChevronDown size={16} />
+                </span>
               </button>
-            </>
+
+              {menuOpen && (
+                <div
+                  style={{
+                    ...styles.dropdown,
+                    ...(isMobile ? styles.dropdownMobile : {}),
+                  }}
+                >
+                  <div style={styles.dropdownHeader}>
+                    <span style={styles.dropdownAvatar}>
+                      <Image
+                        src={photoSrc}
+                        alt={userName}
+                        width={36}
+                        height={36}
+                        style={styles.dropdownAvatarImage}
+                      />
+                    </span>
+
+                    <div style={styles.dropdownUserInfo}>
+                      <p style={styles.dropdownName}>{userName}</p>
+                      <p style={styles.dropdownEmail}>{userEmail}</p>
+                    </div>
+                  </div>
+
+                  <Link
+                    href={profileRoute}
+                    style={styles.dropdownItem}
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    <UserIcon size={16} />
+                    <span>Halaman Profil</span>
+                  </Link>
+
+                  <button onClick={handleLogout} style={styles.dropdownLogout}>
+                    <LogOut size={16} />
+                    <span>Logout</span>
+                  </button>
+                </div>
+              )}
+            </div>
           ) : !loading ? (
             <>
               <Link
@@ -239,11 +320,7 @@ const styles: Record<string, CSSProperties> = {
     alignItems: 'center',
     justifyContent: 'center',
     transition: 'all 0.2s ease',
-  },
-  menuButtonMobile: {
-    width: '42px',
-    height: '42px',
-    fontSize: '16px',
+    flexShrink: 0,
   },
   titleBox: {
     minWidth: 0,
@@ -275,6 +352,7 @@ const styles: Record<string, CSSProperties> = {
     gap: '12px',
     flexWrap: 'nowrap',
     flexShrink: 0,
+    position: 'relative',
   },
   rightSectionMobile: {
     width: '100%',
@@ -283,52 +361,155 @@ const styles: Record<string, CSSProperties> = {
     flexDirection: 'column',
     gap: '10px',
   },
-  userBox: {
+  profileMenuWrapper: {
+    position: 'relative',
+  },
+  profileMenuWrapperMobile: {
+    width: '100%',
+  },
+  profileButton: {
+    border: '1px solid #e2e8f0',
+    backgroundColor: '#ffffff',
+    borderRadius: '14px',
+    padding: '6px 10px 6px 6px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    cursor: 'pointer',
+    minHeight: '52px',
+  },
+  profileImageWrap: {
+    width: '40px',
+    height: '40px',
+    borderRadius: '999px',
+    overflow: 'hidden',
+    backgroundColor: '#e2e8f0',
+    flexShrink: 0,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  profileImage: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+  },
+  profileInfo: {
     display: 'flex',
     flexDirection: 'column',
-    alignItems: 'flex-end',
-    backgroundColor: '#f8fafc',
-    border: '1px solid #e2e8f0',
-    padding: '8px 12px',
-    borderRadius: '12px',
-    minWidth: '220px',
-    maxWidth: '280px',
-  },
-  userBoxMobile: {
-    width: '100%',
-    minWidth: '0',
-    maxWidth: '100%',
     alignItems: 'flex-start',
-    padding: '10px 12px',
+    minWidth: 0,
+    maxWidth: '220px',
   },
-  userName: {
-    color: '#0f172a',
+  profileName: {
     fontSize: '14px',
     fontWeight: 700,
+    color: '#0f172a',
+    lineHeight: 1.2,
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+  },
+  profileMeta: {
+    fontSize: '12px',
+    color: '#64748b',
+    marginTop: '2px',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    maxWidth: '100%',
+  },
+  chevronWrap: {
+    color: '#64748b',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  dropdown: {
+    position: 'absolute',
+    top: 'calc(100% + 10px)',
+    right: 0,
+    width: '260px',
+    backgroundColor: '#ffffff',
+    border: '1px solid #e2e8f0',
+    borderRadius: '16px',
+    boxShadow: '0 20px 40px rgba(15, 23, 42, 0.12)',
+    padding: '10px',
+    zIndex: 120,
+  },
+  dropdownMobile: {
+    position: 'static',
+    width: '100%',
+    marginTop: '10px',
+  },
+  dropdownHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    padding: '8px',
+    borderBottom: '1px solid #e2e8f0',
+    marginBottom: '8px',
+  },
+  dropdownAvatar: {
+    width: '36px',
+    height: '36px',
+    borderRadius: '999px',
+    overflow: 'hidden',
+    backgroundColor: '#e2e8f0',
+    flexShrink: 0,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dropdownAvatarImage: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+  },
+  dropdownUserInfo: {
+    minWidth: 0,
+  },
+  dropdownName: {
+    margin: 0,
+    fontSize: '14px',
+    fontWeight: 700,
+    color: '#0f172a',
     lineHeight: 1.2,
   },
-  userMeta: {
-    color: '#64748b',
+  dropdownEmail: {
+    margin: '4px 0 0',
     fontSize: '12px',
-    marginTop: '4px',
+    color: '#64748b',
     lineHeight: 1.4,
     wordBreak: 'break-word',
   },
-  logoutButton: {
-    border: 'none',
-    backgroundColor: '#dc2626',
-    color: '#ffffff',
-    padding: '10px 16px',
-    borderRadius: '10px',
-    fontWeight: 700,
+  dropdownItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    padding: '12px 12px',
+    borderRadius: '12px',
+    textDecoration: 'none',
+    color: '#0f172a',
     fontSize: '14px',
-    cursor: 'pointer',
-    whiteSpace: 'nowrap',
+    fontWeight: 600,
+    backgroundColor: '#ffffff',
   },
-  logoutButtonMobile: {
+  dropdownLogout: {
     width: '100%',
-    textAlign: 'center',
-    padding: '12px 16px',
+    marginTop: '6px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    padding: '12px 12px',
+    borderRadius: '12px',
+    border: 'none',
+    backgroundColor: '#fff1f2',
+    color: '#be123c',
+    fontSize: '14px',
+    fontWeight: 700,
+    cursor: 'pointer',
   },
   loginButton: {
     textDecoration: 'none',

@@ -8,7 +8,11 @@ export default function AdminReportsView() {
   const reports = getReports();
 
   return (
-    <DashboardLayout>
+    <DashboardLayout
+      role="admin"
+      title="Admin Reports"
+      subtitle="Ringkasan laporan sistem dan aktivitas pengguna"
+    >
       <section style={styles.content}>
         <div style={styles.heroCard}>
           <div style={styles.heroContent}>

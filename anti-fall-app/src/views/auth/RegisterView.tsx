@@ -34,7 +34,7 @@ export default function RegisterView() {
         fullName: form.fullName,
         email: form.email,
         password: form.password,
-        role: form.role,
+        // role: form.role,
       });
 
       alert('Register berhasil.');
@@ -279,6 +279,8 @@ const styles: { [key: string]: React.CSSProperties } = {
     border: '1px solid #cbd5e1',
     fontSize: '15px',
     outline: 'none',
+    color: '#334155',
+
   },
   primaryButton: {
     marginTop: '8px',
