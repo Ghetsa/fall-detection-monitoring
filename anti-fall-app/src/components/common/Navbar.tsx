@@ -4,6 +4,7 @@ import { onAuthStateChanged, User } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../../lib/firebase';
 import { logoutUser } from '../../lib/auth';
+import { Menu, X } from 'lucide-react';
 
 type UserProfile = {
   fullName?: string;
@@ -99,13 +100,9 @@ export default function Navbar({
         >
           <button
             onClick={onToggleSidebar}
-            style={{
-              ...styles.menuButton,
-              ...(isMobile ? styles.menuButtonMobile : {}),
-            }}
-            aria-label="Toggle sidebar"
+            style={styles.menuButton}
           >
-            ☰
+            {collapsed ? <Menu size={20} /> : <X size={20} />}
           </button>
 
           <div style={styles.titleBox}>
@@ -236,11 +233,12 @@ const styles: Record<string, CSSProperties> = {
     borderRadius: '12px',
     border: '1px solid #cbd5e1',
     backgroundColor: '#f8fafc',
+    color: '#475569',
     cursor: 'pointer',
-    fontSize: '18px',
-    fontWeight: 700,
-    color: '#0f172a',
-    flexShrink: 0,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'all 0.2s ease',
   },
   menuButtonMobile: {
     width: '42px',
