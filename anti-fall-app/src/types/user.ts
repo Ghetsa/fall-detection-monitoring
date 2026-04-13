@@ -5,5 +5,8 @@ export interface AppUser {
   role: 'admin' | 'customer';
   phone?: string;
   address?: string;
+  department?: string;
+  relationship?: string;
+  photoURL?: string;
   createdAt?: any;
 }

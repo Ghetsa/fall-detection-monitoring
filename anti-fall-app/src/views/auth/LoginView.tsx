@@ -2,6 +2,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { FormEvent, useState } from 'react';
+import { toast } from 'react-toastify';
 import { loginWithEmail } from '../../lib/auth';
 
 export default function LoginView() {
@@ -27,12 +28,14 @@ export default function LoginView() {
         password: form.password,
       });
 
-      alert('Login berhasil.');
+      toast.success('Login berhasil.');
 
       router.push(result.redirectTo);
     } catch (err: any) {
       console.error(err);
-      setError(err.message || 'Email atau password salah.');
+      const message = err.message || 'Email atau password salah.';
+      setError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }

@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import Image from 'next/image';
+import { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import {
   User,
@@ -7,17 +9,67 @@ import {
   MapPin,
   ShieldCheck,
   Save,
+  Loader,
 } from 'lucide-react';
+import { useAuth } from '../../hooks/useAuth';
+import { getUserById, saveUserProfile } from '../../services/userService';
 
 export default function CustomerProfileView() {
-  const [fullName, setFullName] = useState('Cempaka');
-  const [email, setEmail] = useState('cempaka@gmail.com');
-  const [phone, setPhone] = useState('081234567890');
-  const [address, setAddress] = useState('Bandar Lampung');
-  const [relationship, setRelationship] = useState('Anak');
+  const { user, loading: authLoading } = useAuth();
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [address, setAddress] = useState('');
+  const [relationship, setRelationship] = useState('');
+  const [photoURL, setPhotoURL] = useState('/images/logo.png');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  const handleSave = () => {
-    alert('Profile customer berhasil disimpan.');
+  useEffect(() => {
+    if (authLoading) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    const loadProfile = async () => {
+      setLoading(true);
+      try {
+        const profile = await getUserById(user.uid);
+        setFullName(profile?.fullName || user.displayName || 'Customer');
+        setEmail(profile?.email || user.email || '');
+        setPhone(profile?.phone || '');
+        setAddress(profile?.address || '');
+        setRelationship(profile?.relationship || '');
+        setPhotoURL(profile?.photoURL || user.photoURL || '/images/logo.png');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void loadProfile();
+  }, [user, authLoading]);
+
+  const handleSave = async () => {
+    if (!user) return;
+    setSaving(true);
+    try {
+      await saveUserProfile(user.uid, {
+        fullName,
+        email,
+        phone,
+        address,
+        relationship,
+        role: 'customer',
+        photoURL: photoURL || '/images/logo.png',
+      });
+      toast.success('Profile customer berhasil disimpan.');
+    } catch (error) {
+      console.error('Gagal menyimpan profile customer:', error);
+      toast.error('Profile customer gagal disimpan.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -125,10 +177,20 @@ export default function CustomerProfileView() {
               </div>
             </div>
 
-            <button onClick={handleSave} style={styles.saveButton}>
-              <Save size={16} />
-              <span>Simpan Perubahan</span>
-            </button>
+            {loading ? (
+              <div style={styles.loadingBox}>
+                <Loader size={22} color="#94a3b8" />
+              </div>
+            ) : (
+              <button
+                onClick={handleSave}
+                style={{ ...styles.saveButton, opacity: saving ? 0.7 : 1 }}
+                disabled={saving}
+              >
+                {saving ? <Loader size={16} /> : <Save size={16} />}
+                <span>{saving ? 'Menyimpan...' : 'Simpan Perubahan'}</span>
+              </button>
+            )}
           </div>
 
           <div style={styles.sideCard}>
@@ -138,7 +200,15 @@ export default function CustomerProfileView() {
             </div>
 
             <div style={styles.profileBox}>
-              <div style={styles.avatar}>C</div>
+              <div style={styles.avatarImageWrap}>
+                <Image
+                  src={photoURL || '/images/logo.png'}
+                  alt={fullName || 'Customer profile'}
+                  width={72}
+                  height={72}
+                  style={styles.avatarImage}
+                />
+              </div>
               <h4 style={styles.profileName}>{fullName}</h4>
               <p style={styles.profileRole}>Customer</p>
             </div>
@@ -315,6 +385,11 @@ const styles: { [key: string]: React.CSSProperties } = {
     color: '#0f172a',
     backgroundColor: '#ffffff',
   },
+  loadingBox: {
+    display: 'flex',
+    justifyContent: 'center',
+    padding: '18px 0 6px',
+  },
   saveButton: {
     marginTop: '6px',
     backgroundColor: '#2563eb',
@@ -334,18 +409,21 @@ const styles: { [key: string]: React.CSSProperties } = {
     paddingBottom: '20px',
     borderBottom: '1px solid #e2e8f0',
   },
-  avatar: {
+  avatarImageWrap: {
     width: '72px',
     height: '72px',
     borderRadius: '999px',
+    overflow: 'hidden',
     backgroundColor: '#dbeafe',
-    color: '#1d4ed8',
-    fontSize: '28px',
-    fontWeight: 800,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     margin: '0 auto 12px',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
   },
   profileName: {
     margin: 0,

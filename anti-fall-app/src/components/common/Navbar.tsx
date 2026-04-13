@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { useEffect, useRef, useState, CSSProperties } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
+import { toast } from 'react-toastify';
 import { auth, db } from '../../lib/firebase';
 import { logoutUser } from '../../lib/auth';
 import { Menu, X, User as UserIcon, LogOut, ChevronDown } from 'lucide-react';
@@ -94,10 +95,10 @@ export default function Navbar({
     try {
       await logoutUser();
       setMenuOpen(false);
-      alert('Logout berhasil');
+      toast.success('Logout berhasil');
     } catch (error) {
       console.error('Logout gagal:', error);
-      alert('Logout gagal');
+      toast.error('Logout gagal');
     }
   };
 
@@ -111,7 +112,7 @@ export default function Navbar({
   const photoSrc =
     profile?.photoURL ||
     currentUser?.photoURL ||
-    '/images/logo-kuceng.png';
+    '/images/logo.png';
 
   return (
     <header

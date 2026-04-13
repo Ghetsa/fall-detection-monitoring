@@ -2,6 +2,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { FormEvent, useState } from 'react';
+import { toast } from 'react-toastify';
 import { registerWithEmail } from '../../lib/auth';
 
 export default function RegisterView() {
@@ -23,7 +24,9 @@ export default function RegisterView() {
     setError('');
 
     if (form.password !== form.confirmPassword) {
-      setError('Password dan konfirmasi password tidak sama.');
+      const message = 'Password dan konfirmasi password tidak sama.';
+      setError(message);
+      toast.error(message);
       return;
     }
 
@@ -37,11 +40,13 @@ export default function RegisterView() {
         // role: form.role,
       });
 
-      alert('Register berhasil.');
+      toast.success('Register berhasil.');
       router.push('/auth/login');
     } catch (err: any) {
       console.error(err);
-      setError(err.message || 'Terjadi kesalahan saat register.');
+      const message = err.message || 'Terjadi kesalahan saat register.';
+      setError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
