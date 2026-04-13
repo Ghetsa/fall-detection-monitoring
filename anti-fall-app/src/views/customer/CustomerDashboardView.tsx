@@ -1,6 +1,90 @@
+import { useState, useEffect } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
+import { useAuth } from '../../hooks/useAuth';
+import { getLansiaByCustomer } from '../../services/lansiaService';
+import { getDeviceByLansiaId } from '../../services/deviceService';
+import { getIncidentsByCustomer } from '../../services/incidentService';
+import { Lansia } from '../../types/lansia';
+import { Device } from '../../types/device';
+import { Incident } from '../../types/incident';
+import { Loader } from 'lucide-react';
+
+function formatTimestamp(ts: any): string {
+  if (!ts) return '—';
+  const date: Date = ts.toDate ? ts.toDate() : new Date(ts);
+  return date.toLocaleString('id-ID', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+function timeAgo(ts: any): string {
+  if (!ts) return '—';
+  const date: Date = ts.toDate ? ts.toDate() : new Date(ts);
+  const diff = Math.floor((Date.now() - date.getTime()) / 1000);
+  if (diff < 60) return `${diff} detik yang lalu`;
+  if (diff < 3600) return `${Math.floor(diff / 60)} menit yang lalu`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)} jam yang lalu`;
+  return `${Math.floor(diff / 86400)} hari yang lalu`;
+}
 
 export default function CustomerDashboardView() {
+  const { user } = useAuth();
+  const [lansiaList, setLansiaList] = useState<Lansia[]>([]);
+  const [device, setDevice] = useState<Device | null>(null);
+  const [incidents, setIncidents] = useState<Incident[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      try {
+        const [lansiaData, incidentData] = await Promise.all([
+          getLansiaByCustomer(user.uid),
+          getIncidentsByCustomer(user.uid),
+        ]);
+        if (cancelled) return;
+        setLansiaList(lansiaData);
+        setIncidents(incidentData);
+
+        // Load device for first active lansia
+        if (lansiaData.length > 0) {
+          const dev = await getDeviceByLansiaId(lansiaData[0].id);
+          if (!cancelled) setDevice(dev);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [user]);
+
+  const firstLansia = lansiaList[0] ?? null;
+  const recentIncidents = incidents.slice(0, 3);
+  const hasActiveFall = incidents.some(
+    (i) => i.type === 'fall_detected' && !i.isResolved
+  );
+  const statusLabel = hasActiveFall ? 'Bahaya!' : 'Safe';
+  const statusColor = hasActiveFall ? '#b91c1c' : '#166534';
+  const statusBg = hasActiveFall ? '#fee2e2' : '#dcfce7';
+  const statusDotColor = hasActiveFall ? '#ef4444' : '#22c55e';
+
+  const severityStyle = (sev: string) => {
+    if (sev === 'danger') return styles.logStatusDanger;
+    if (sev === 'warning') return styles.logStatusWarning;
+    return styles.logStatusSafe;
+  };
+  const severityLabel = (sev: string) => {
+    if (sev === 'danger') return 'Bahaya';
+    if (sev === 'warning') return 'Perhatian';
+    return 'Normal';
+  };
+
   return (
     <DashboardLayout
       role="customer"
@@ -17,41 +101,46 @@ export default function CustomerDashboardView() {
               notifikasi darurat dalam satu dashboard.
             </p>
           </div>
-
-          <div style={styles.statusPill}>
-            <span style={styles.statusDot} />
-            Safe
+          <div style={{ ...styles.statusPill, color: statusColor, backgroundColor: '#ffffff' }}>
+            <span style={{ ...styles.statusDot, backgroundColor: statusDotColor }} />
+            {loading ? '—' : statusLabel}
           </div>
         </div>
 
         <div style={styles.cardGrid}>
           <div style={styles.card}>
             <p style={styles.cardLabel}>Status Saat Ini</p>
-            <h3 style={styles.cardValue}>Safe</h3>
+            <h3 style={{ ...styles.cardValue, color: loading ? '#94a3b8' : statusColor }}>
+              {loading ? '—' : statusLabel}
+            </h3>
             <p style={styles.cardDescription}>
-              Tidak ada indikasi jatuh yang terdeteksi.
+              {loading ? 'Memuat...' : hasActiveFall ? 'Terdeteksi kemungkinan jatuh!' : 'Tidak ada indikasi jatuh yang terdeteksi.'}
             </p>
           </div>
 
           <div style={styles.card}>
             <p style={styles.cardLabel}>Battery Device</p>
-            <h3 style={styles.cardValue}>87%</h3>
+            <h3 style={styles.cardValue}>
+              {loading ? '—' : device ? `${device.batteryLevel}%` : '—'}
+            </h3>
             <p style={styles.cardDescription}>
-              Kondisi baterai masih cukup untuk digunakan.
+              {device?.isOnline ? 'Device online dan aktif.' : 'Device sedang offline.'}
             </p>
           </div>
 
           <div style={styles.card}>
             <p style={styles.cardLabel}>Lokasi Terakhir</p>
-            <h3 style={styles.cardValue}>Bandar Lampung</h3>
+            <h3 style={styles.cardValue}>
+              {loading ? '—' : device?.locationName ?? '—'}
+            </h3>
             <p style={styles.cardDescription}>
-              Update lokasi diterima 2 menit yang lalu.
+              {device ? `Update: ${timeAgo(device.lastSeen)}` : 'Belum ada data.'}
             </p>
           </div>
 
           <div style={styles.card}>
             <p style={styles.cardLabel}>Total Logs Bulan Ini</p>
-            <h3 style={styles.cardValue}>4</h3>
+            <h3 style={styles.cardValue}>{loading ? '—' : incidents.length}</h3>
             <p style={styles.cardDescription}>
               Total histori kejadian yang tersimpan.
             </p>
@@ -65,27 +154,32 @@ export default function CustomerDashboardView() {
               <span style={styles.sectionBadge}>Real-time</span>
             </div>
 
-            <div style={styles.summaryList}>
-              <div style={styles.summaryItem}>
-                <span style={styles.summaryLabel}>Nama Lansia</span>
-                <span style={styles.summaryValue}>Nenek Siti</span>
+            {loading ? (
+              <div style={styles.loadingBox}><Loader size={20} color="#94a3b8" /></div>
+            ) : (
+              <div style={styles.summaryList}>
+                <div style={styles.summaryItem}>
+                  <span style={styles.summaryLabel}>Nama Lansia</span>
+                  <span style={styles.summaryValue}>{firstLansia?.nama ?? '—'}</span>
+                </div>
+                <div style={styles.summaryItem}>
+                  <span style={styles.summaryLabel}>Serial Device</span>
+                  <span style={styles.summaryValue}>{firstLansia?.deviceSerial ?? '—'}</span>
+                </div>
+                <div style={styles.summaryItem}>
+                  <span style={styles.summaryLabel}>Last Update</span>
+                  <span style={styles.summaryValue}>{device ? timeAgo(device.lastSeen) : '—'}</span>
+                </div>
+                <div style={styles.summaryItem}>
+                  <span style={styles.summaryLabel}>Kontak Darurat</span>
+                  <span style={styles.summaryValue}>{firstLansia?.kontakDarurat ?? '—'}</span>
+                </div>
+                <div style={styles.summaryItem}>
+                  <span style={styles.summaryLabel}>Total Lansia</span>
+                  <span style={styles.summaryValue}>{lansiaList.length} terdaftar</span>
+                </div>
               </div>
-
-              <div style={styles.summaryItem}>
-                <span style={styles.summaryLabel}>Serial Device</span>
-                <span style={styles.summaryValue}>ESP32-001</span>
-              </div>
-
-              <div style={styles.summaryItem}>
-                <span style={styles.summaryLabel}>Last Update</span>
-                <span style={styles.summaryValue}>10:24 WIB</span>
-              </div>
-
-              <div style={styles.summaryItem}>
-                <span style={styles.summaryLabel}>Emergency Contact</span>
-                <span style={styles.summaryValue}>0812-3456-7890</span>
-              </div>
-            </div>
+            )}
           </div>
 
           <div style={styles.largeCard}>
@@ -94,29 +188,21 @@ export default function CustomerDashboardView() {
               <span style={styles.sectionBadgeAlt}>Logs</span>
             </div>
 
-            <div style={styles.logItem}>
-              <div>
-                <p style={styles.logTitle}>Fall Detected</p>
-                <p style={styles.logTime}>12 April 2026 • 08:45</p>
-              </div>
-              <span style={styles.logStatusDanger}>Warning</span>
-            </div>
-
-            <div style={styles.logItem}>
-              <div>
-                <p style={styles.logTitle}>Safe Status</p>
-                <p style={styles.logTime}>11 April 2026 • 17:12</p>
-              </div>
-              <span style={styles.logStatusSafe}>Normal</span>
-            </div>
-
-            <div style={styles.logItem}>
-              <div>
-                <p style={styles.logTitle}>Battery Low</p>
-                <p style={styles.logTime}>10 April 2026 • 09:20</p>
-              </div>
-              <span style={styles.logStatusWarning}>Low</span>
-            </div>
+            {loading ? (
+              <div style={styles.loadingBox}><Loader size={20} color="#94a3b8" /></div>
+            ) : recentIncidents.length === 0 ? (
+              <p style={styles.emptyText}>Belum ada riwayat kejadian.</p>
+            ) : (
+              recentIncidents.map((inc) => (
+                <div key={inc.id} style={styles.logItem}>
+                  <div>
+                    <p style={styles.logTitle}>{inc.description.slice(0, 50)}...</p>
+                    <p style={styles.logTime}>{formatTimestamp(inc.timestamp)}</p>
+                  </div>
+                  <span style={severityStyle(inc.severity)}>{severityLabel(inc.severity)}</span>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </section>
@@ -124,206 +210,37 @@ export default function CustomerDashboardView() {
   );
 }
 
+
 const styles: { [key: string]: React.CSSProperties } = {
-  content: {
-    padding: '5px',
-    minWidth: 0,
-  },
-  welcomeCard: {
-    background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
-    color: '#ffffff',
-    borderRadius: '24px',
-    padding: '28px',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: '16px',
-    flexWrap: 'wrap',
-  },
-  welcomeContent: {
-    flex: 1,
-    minWidth: 0,
-  },
-  welcomeLabel: {
-    margin: 0,
-    fontSize: '13px',
-    fontWeight: 700,
-    textTransform: 'uppercase',
-    letterSpacing: '0.08em',
-    color: 'rgba(255,255,255,0.8)',
-  },
-  welcomeTitle: {
-    margin: '8px 0 10px',
-    fontSize: '32px',
-    fontWeight: 800,
-    lineHeight: 1.2,
-  },
-  welcomeText: {
-    margin: 0,
-    fontSize: '15px',
-    lineHeight: 1.7,
-    color: 'rgba(255,255,255,0.92)',
-    maxWidth: '700px',
-  },
-  statusPill: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '10px',
-    backgroundColor: '#ffffff',
-    color: '#166534',
-    padding: '12px 18px',
-    borderRadius: '999px',
-    fontWeight: 800,
-    fontSize: '15px',
-  },
-  statusDot: {
-    width: '10px',
-    height: '10px',
-    borderRadius: '999px',
-    backgroundColor: '#22c55e',
-  },
-  cardGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-    gap: '20px',
-    marginTop: '24px',
-  },
-  card: {
-    backgroundColor: '#ffffff',
-    borderRadius: '20px',
-    padding: '22px',
-    boxShadow: '0 10px 25px rgba(15, 23, 42, 0.05)',
-    border: '1px solid #e2e8f0',
-    minWidth: 0,
-  },
-  cardLabel: {
-    margin: 0,
-    fontSize: '14px',
-    color: '#64748b',
-    fontWeight: 600,
-  },
-  cardValue: {
-    margin: '12px 0 10px',
-    fontSize: '30px',
-    fontWeight: 800,
-    color: '#0f172a',
-    wordBreak: 'break-word',
-  },
-  cardDescription: {
-    margin: 0,
-    fontSize: '14px',
-    lineHeight: 1.7,
-    color: '#475569',
-  },
-  bottomGrid: {
-    display: 'grid',
-    gridTemplateColumns: '1.2fr 1fr',
-    gap: '20px',
-    marginTop: '24px',
-  },
-  largeCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: '22px',
-    padding: '24px',
-    boxShadow: '0 10px 25px rgba(15, 23, 42, 0.05)',
-    border: '1px solid #e2e8f0',
-    minWidth: 0,
-  },
-  sectionHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '20px',
-    gap: '12px',
-    flexWrap: 'wrap',
-  },
-  sectionTitle: {
-    margin: 0,
-    fontSize: '22px',
-    fontWeight: 800,
-    color: '#0f172a',
-  },
-  sectionBadge: {
-    backgroundColor: '#eff6ff',
-    color: '#1d4ed8',
-    padding: '8px 12px',
-    borderRadius: '999px',
-    fontSize: '13px',
-    fontWeight: 700,
-  },
-  sectionBadgeAlt: {
-    backgroundColor: '#f1f5f9',
-    color: '#334155',
-    padding: '8px 12px',
-    borderRadius: '999px',
-    fontSize: '13px',
-    fontWeight: 700,
-  },
-  summaryList: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '16px',
-  },
-  summaryItem: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    gap: '16px',
-    paddingBottom: '12px',
-    borderBottom: '1px solid #e2e8f0',
-    flexWrap: 'wrap',
-  },
-  summaryLabel: {
-    color: '#64748b',
-    fontSize: '14px',
-  },
-  summaryValue: {
-    color: '#0f172a',
-    fontSize: '15px',
-    fontWeight: 700,
-    wordBreak: 'break-word',
-  },
-  logItem: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: '16px',
-    padding: '14px 0',
-    borderBottom: '1px solid #e2e8f0',
-    flexWrap: 'wrap',
-  },
-  logTitle: {
-    margin: 0,
-    fontSize: '15px',
-    fontWeight: 700,
-    color: '#0f172a',
-  },
-  logTime: {
-    margin: '6px 0 0',
-    fontSize: '13px',
-    color: '#64748b',
-  },
-  logStatusDanger: {
-    backgroundColor: '#fee2e2',
-    color: '#b91c1c',
-    padding: '8px 12px',
-    borderRadius: '999px',
-    fontSize: '13px',
-    fontWeight: 700,
-  },
-  logStatusSafe: {
-    backgroundColor: '#dcfce7',
-    color: '#166534',
-    padding: '8px 12px',
-    borderRadius: '999px',
-    fontSize: '13px',
-    fontWeight: 700,
-  },
-  logStatusWarning: {
-    backgroundColor: '#fef3c7',
-    color: '#92400e',
-    padding: '8px 12px',
-    borderRadius: '999px',
-    fontSize: '13px',
-    fontWeight: 700,
-  },
+  content: { padding: '5px', minWidth: 0 },
+  welcomeCard: { background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)', color: '#ffffff', borderRadius: '24px', padding: '28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' },
+  welcomeContent: { flex: 1, minWidth: 0 },
+  welcomeLabel: { margin: 0, fontSize: '13px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.8)' },
+  welcomeTitle: { margin: '8px 0 10px', fontSize: '32px', fontWeight: 800, lineHeight: 1.2 },
+  welcomeText: { margin: 0, fontSize: '15px', lineHeight: 1.7, color: 'rgba(255,255,255,0.92)', maxWidth: '700px' },
+  statusPill: { display: 'inline-flex', alignItems: 'center', gap: '10px', padding: '12px 18px', borderRadius: '999px', fontWeight: 800, fontSize: '15px' },
+  statusDot: { width: '10px', height: '10px', borderRadius: '999px' },
+  cardGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginTop: '24px' },
+  card: { backgroundColor: '#ffffff', borderRadius: '20px', padding: '22px', boxShadow: '0 10px 25px rgba(15,23,42,0.05)', border: '1px solid #e2e8f0', minWidth: 0 },
+  cardLabel: { margin: 0, fontSize: '14px', color: '#64748b', fontWeight: 600 },
+  cardValue: { margin: '12px 0 10px', fontSize: '30px', fontWeight: 800, color: '#0f172a', wordBreak: 'break-word' },
+  cardDescription: { margin: 0, fontSize: '14px', lineHeight: 1.7, color: '#475569' },
+  bottomGrid: { display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '20px', marginTop: '24px' },
+  largeCard: { backgroundColor: '#ffffff', borderRadius: '22px', padding: '24px', boxShadow: '0 10px 25px rgba(15,23,42,0.05)', border: '1px solid #e2e8f0', minWidth: 0 },
+  sectionHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', gap: '12px', flexWrap: 'wrap' },
+  sectionTitle: { margin: 0, fontSize: '22px', fontWeight: 800, color: '#0f172a' },
+  sectionBadge: { backgroundColor: '#eff6ff', color: '#1d4ed8', padding: '8px 12px', borderRadius: '999px', fontSize: '13px', fontWeight: 700 },
+  sectionBadgeAlt: { backgroundColor: '#f1f5f9', color: '#334155', padding: '8px 12px', borderRadius: '999px', fontSize: '13px', fontWeight: 700 },
+  summaryList: { display: 'flex', flexDirection: 'column', gap: '16px' },
+  summaryItem: { display: 'flex', justifyContent: 'space-between', gap: '16px', paddingBottom: '12px', borderBottom: '1px solid #e2e8f0', flexWrap: 'wrap' },
+  summaryLabel: { color: '#64748b', fontSize: '14px' },
+  summaryValue: { color: '#0f172a', fontSize: '15px', fontWeight: 700, wordBreak: 'break-word' },
+  logItem: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', padding: '14px 0', borderBottom: '1px solid #e2e8f0', flexWrap: 'wrap' },
+  logTitle: { margin: 0, fontSize: '14px', fontWeight: 700, color: '#0f172a' },
+  logTime: { margin: '6px 0 0', fontSize: '12px', color: '#64748b' },
+  logStatusDanger: { backgroundColor: '#fee2e2', color: '#b91c1c', padding: '8px 12px', borderRadius: '999px', fontSize: '12px', fontWeight: 700, whiteSpace: 'nowrap' },
+  logStatusSafe: { backgroundColor: '#dcfce7', color: '#166534', padding: '8px 12px', borderRadius: '999px', fontSize: '12px', fontWeight: 700, whiteSpace: 'nowrap' },
+  logStatusWarning: { backgroundColor: '#fef3c7', color: '#92400e', padding: '8px 12px', borderRadius: '999px', fontSize: '12px', fontWeight: 700, whiteSpace: 'nowrap' },
+  loadingBox: { display: 'flex', justifyContent: 'center', padding: '24px 0' },
+  emptyText: { margin: 0, fontSize: '14px', color: '#94a3b8', textAlign: 'center', padding: '20px 0' },
 };

@@ -8,10 +8,12 @@ import {
   FileText,
   Siren,
   Bell,
+  Users,
 } from 'lucide-react';
 
 const menuItems = [
   { label: 'Dashboard', href: '/customer/dashboard', icon: LayoutDashboard },
+  { label: 'Kelola Lansia', href: '/customer/lansia', icon: Users },
   { label: 'Tracking', href: '/customer/tracking', icon: MapPin },
   { label: 'Logs', href: '/customer/logs', icon: FileText },
   { label: 'Emergency', href: '/customer/emergency', icon: Siren },

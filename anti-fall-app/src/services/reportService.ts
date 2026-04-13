@@ -1,52 +1,53 @@
-import { ReportItem, ReportSummary } from '../types/report';
+import { collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 
-export function getReportSummary(): ReportSummary {
-  return {
-    totalUsers: 120,
-    totalDevices: 95,
-    activeDevices: 87,
-    totalIncidents: 35,
-    monthlyReports: 12,
-  };
+export interface Report {
+  id: string;
+  title: string;
+  category: string;
+  period: string;
+  generatedAt: any;
+  status: 'Completed' | 'Processing';
+  description: string;
+  data: Record<string, any>;
 }
 
-export function getReports(): ReportItem[] {
-  return [
-    {
-      id: 'RPT-001',
-      title: 'Monthly Incident Report',
-      category: 'Incident',
-      period: 'April 2026',
-      generatedAt: '2026-04-12 10:20 WIB',
-      status: 'Completed',
-      description: 'Ringkasan seluruh kejadian jatuh selama bulan April.',
-    },
-    {
-      id: 'RPT-002',
-      title: 'Active Device Report',
-      category: 'Device',
-      period: 'Weekly',
-      generatedAt: '2026-04-11 08:15 WIB',
-      status: 'Completed',
-      description: 'Laporan perangkat aktif dan perangkat offline minggu ini.',
-    },
-    {
-      id: 'RPT-003',
-      title: 'User Activity Report',
-      category: 'User',
-      period: 'April 2026',
-      generatedAt: '2026-04-10 14:30 WIB',
-      status: 'Processing',
-      description: 'Laporan aktivitas user customer dan admin.',
-    },
-    {
-      id: 'RPT-004',
-      title: 'System Health Report',
-      category: 'System',
-      period: 'Today',
-      generatedAt: '2026-04-12 09:00 WIB',
-      status: 'Completed',
-      description: 'Status API, database, dan cloud service.',
-    },
-  ];
+const COL = 'reports';
+
+export async function getReports(): Promise<Report[]> {
+  const q = query(collection(db, COL), orderBy('generatedAt', 'desc'));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Report));
+}
+
+export async function getReportSummary(): Promise<{
+  totalUsers: number;
+  totalDevices: number;
+  activeDevices: number;
+  totalIncidents: number;
+  monthlyReports: number;
+}> {
+  const [usersSnap, devicesSnap, incidentsSnap, reportsSnap] = await Promise.all([
+    getDocs(collection(db, 'users')),
+    getDocs(collection(db, 'devices')),
+    getDocs(collection(db, 'incidents')),
+    getDocs(collection(db, COL)),
+  ]);
+
+  const activeDevices = devicesSnap.docs.filter((d) => d.data().isOnline === true).length;
+
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const monthlyReports = reportsSnap.docs.filter((d) => {
+    const gen = d.data().generatedAt?.toDate?.();
+    return gen && gen >= startOfMonth;
+  }).length;
+
+  return {
+    totalUsers: usersSnap.size,
+    totalDevices: devicesSnap.size,
+    activeDevices,
+    totalIncidents: incidentsSnap.size,
+    monthlyReports,
+  };
 }
