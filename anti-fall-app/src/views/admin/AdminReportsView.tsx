@@ -1,75 +1,21 @@
 import { useEffect, useState } from 'react';
-import { Download, FileJson, FileSpreadsheet, Loader } from 'lucide-react';
+import { Download, FileDown, FileJson, FileSpreadsheet, Loader } from 'lucide-react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import ReportSummaryCard from '../../components/cards/ReportSummaryCard';
 import { getReports, getReportSummary, Report } from '../../services/reportService';
-
-function formatTimestamp(ts: any): string {
-  if (!ts) return '-';
-  const date: Date = ts.toDate ? ts.toDate() : new Date(ts);
-  return date.toLocaleDateString('id-ID', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
-}
-
-function sanitizeFilenamePart(value: string): string {
-  return value
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 60);
-}
-
-function formatCellValue(value: unknown): string {
-  if (value === null || value === undefined || value === '') return '-';
-  if (typeof value === 'object') return JSON.stringify(value);
-  return String(value);
-}
-
-function convertRowsToCsv(rows: Array<Record<string, unknown>>): string {
-  if (rows.length === 0) return '';
-
-  const headers = Array.from(
-    rows.reduce((set, row) => {
-      Object.keys(row).forEach((key) => set.add(key));
-      return set;
-    }, new Set<string>())
-  );
-
-  const escapeCsvCell = (value: unknown) => {
-    const normalized = formatCellValue(value).replace(/"/g, '""');
-    return `"${normalized}"`;
-  };
-
-  return [
-    headers.join(','),
-    ...rows.map((row) => headers.map((header) => escapeCsvCell(row[header])).join(',')),
-  ].join('\n');
-}
-
-function triggerDownload(filename: string, content: string, mimeType: string) {
-  const blob = new Blob([content], { type: mimeType });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
-}
+import {
+  buildReportRows,
+  downloadExcelWorkbook,
+  formatReportTimestamp,
+  ReportSummaryData,
+  sanitizeFilenamePart,
+  triggerDownload,
+  openPdfTemplate,
+} from '../../lib/reportExports';
 
 export default function AdminReportsView() {
   const [reports, setReports] = useState<Report[]>([]);
-  const [summary, setSummary] = useState<{
-    totalUsers: number;
-    totalDevices: number;
-    activeDevices: number;
-    totalIncidents: number;
-    monthlyReports: number;
-  } | null>(null);
+  const [summary, setSummary] = useState<ReportSummaryData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -80,6 +26,7 @@ export default function AdminReportsView() {
           getReports(),
           getReportSummary(),
         ]);
+
         setReports(reportsData);
         setSummary(summaryData);
       } finally {
@@ -94,7 +41,7 @@ export default function AdminReportsView() {
       title: report.title,
       category: report.category,
       period: report.period,
-      generatedAt: formatTimestamp(report.generatedAt),
+      generatedAt: formatReportTimestamp(report.generatedAt),
       status: report.status,
       description: report.description,
       data: report.data ?? {},
@@ -107,50 +54,94 @@ export default function AdminReportsView() {
     );
   };
 
-  const downloadReportCsv = (report: Report) => {
-    const baseRow = {
-      id: report.id,
-      title: report.title,
-      category: report.category,
-      period: report.period,
-      generatedAt: formatTimestamp(report.generatedAt),
-      status: report.status,
-      description: report.description,
-    };
-
-    const detailRows =
-      report.data && Object.keys(report.data).length > 0
-        ? Object.entries(report.data).map(([metric, value]) => ({
-            ...baseRow,
-            metric,
-            value: formatCellValue(value),
-          }))
-        : [{ ...baseRow, metric: '-', value: '-' }];
-
-    triggerDownload(
-      `${sanitizeFilenamePart(report.title || report.id)}.csv`,
-      convertRowsToCsv(detailRows),
-      'text/csv;charset=utf-8'
+  const downloadReportExcel = (report: Report) => {
+    downloadExcelWorkbook(
+      [
+        {
+          name: report.title || 'Report',
+          rows: buildReportRows(report),
+        },
+      ],
+      `${sanitizeFilenamePart(report.title || report.id)}.xlsx`
     );
   };
 
-  const downloadAllReportsCsv = () => {
-    const rows = reports.map((report) => ({
-      id: report.id,
-      title: report.title,
-      category: report.category,
-      period: report.period,
-      generatedAt: formatTimestamp(report.generatedAt),
-      status: report.status,
-      description: report.description,
-      metrics: Object.keys(report.data ?? {}).length,
-    }));
-
-    triggerDownload(
-      `admin-reports-${new Date().toISOString().slice(0, 10)}.csv`,
-      convertRowsToCsv(rows),
-      'text/csv;charset=utf-8'
+  const downloadAllReportsExcel = () => {
+    downloadExcelWorkbook(
+      [
+        {
+          name: 'Reports Summary',
+          rows: reports.map((report) => ({
+            id: report.id,
+            title: report.title,
+            category: report.category,
+            period: report.period,
+            generatedAt: formatReportTimestamp(report.generatedAt),
+            status: report.status,
+            description: report.description,
+            metrics: Object.keys(report.data ?? {}).length,
+          })),
+        },
+        ...reports
+          .filter((report) => report.status === 'Completed')
+          .map((report) => ({
+            name: sanitizeFilenamePart(report.title || report.id) || 'Report',
+            rows: buildReportRows(report),
+          })),
+      ],
+      `admin-reports-${new Date().toISOString().slice(0, 10)}.xlsx`
     );
+  };
+
+  const downloadReportPdf = (report: Report) => {
+    openPdfTemplate({
+      title: report.title,
+      subtitle: report.description,
+      summaryRows: [
+        { label: 'Kategori', value: report.category },
+        { label: 'Periode', value: report.period },
+        { label: 'Status', value: report.status },
+        { label: 'Generated', value: formatReportTimestamp(report.generatedAt) },
+      ],
+      tableTitle: 'Detail Report',
+      headers: ['ID', 'Kategori', 'Periode', 'Dibuat', 'Status', 'Metric', 'Value'],
+      rows: buildReportRows(report).map((row) => [
+        String(row.id),
+        String(row.category),
+        String(row.period),
+        String(row.generatedAt),
+        String(row.status),
+        String(row.metric),
+        String(row.value),
+      ]),
+    });
+  };
+
+  const downloadAllReportsPdf = () => {
+    openPdfTemplate({
+      title: 'Admin Reports Summary',
+      subtitle:
+        'Ringkasan seluruh laporan sistem, insiden, perangkat, dan pengguna yang tersedia pada pusat laporan admin.',
+      summaryRows: summary
+        ? [
+            { label: 'Total Users', value: summary.totalUsers },
+            { label: 'Total Devices', value: summary.totalDevices },
+            { label: 'Active Devices', value: summary.activeDevices },
+            { label: 'Total Incidents', value: summary.totalIncidents },
+            { label: 'Monthly Reports', value: summary.monthlyReports },
+          ]
+        : undefined,
+      tableTitle: 'Reports List',
+      headers: ['Title', 'Category', 'Period', 'Generated At', 'Status', 'Metrics'],
+      rows: reports.map((report) => [
+        report.title,
+        report.category,
+        report.period,
+        formatReportTimestamp(report.generatedAt),
+        report.status,
+        String(Object.keys(report.data ?? {}).length),
+      ]),
+    });
   };
 
   const getStatusStyle = (status: string): React.CSSProperties => {
@@ -228,14 +219,30 @@ export default function AdminReportsView() {
                   type="button"
                   style={{
                     ...styles.downloadAllButton,
+                    ...styles.pdfButton,
                     ...(loading || reports.length === 0 ? styles.disabledButton : {}),
                   }}
-                  onClick={downloadAllReportsCsv}
+                  onClick={downloadAllReportsPdf}
+                  disabled={loading || reports.length === 0}
+                >
+                  <FileDown size={16} />
+                  Export PDF
+                </button>
+
+                <button
+                  type="button"
+                  style={{
+                    ...styles.downloadAllButton,
+                    ...styles.excelButton,
+                    ...(loading || reports.length === 0 ? styles.disabledButton : {}),
+                  }}
+                  onClick={downloadAllReportsExcel}
                   disabled={loading || reports.length === 0}
                 >
                   <Download size={16} />
-                  Unduh Semua CSV
+                  Export Excel
                 </button>
+
                 <span style={styles.tableBadge}>Latest</span>
               </div>
             </div>
@@ -273,7 +280,7 @@ export default function AdminReportsView() {
                             <span style={styles.catBadge}>{report.category}</span>
                           </td>
                           <td style={styles.td}>{report.period}</td>
-                          <td style={styles.td}>{formatTimestamp(report.generatedAt)}</td>
+                          <td style={styles.td}>{formatReportTimestamp(report.generatedAt)}</td>
                           <td style={styles.td}>
                             <span style={{ ...styles.statusBadge, ...getStatusStyle(report.status) }}>
                               {report.status}
@@ -285,20 +292,40 @@ export default function AdminReportsView() {
                                 type="button"
                                 style={{
                                   ...styles.actionButton,
-                                  ...styles.csvButton,
+                                  ...styles.pdfActionButton,
                                   ...(isDownloadable ? {} : styles.disabledButton),
                                 }}
-                                onClick={() => downloadReportCsv(report)}
+                                onClick={() => downloadReportPdf(report)}
                                 disabled={!isDownloadable}
                                 title={
                                   isDownloadable
-                                    ? 'Unduh laporan sebagai CSV'
+                                    ? 'Export report sebagai PDF'
+                                    : 'Laporan masih diproses'
+                                }
+                              >
+                                <FileDown size={15} />
+                                PDF
+                              </button>
+
+                              <button
+                                type="button"
+                                style={{
+                                  ...styles.actionButton,
+                                  ...styles.excelActionButton,
+                                  ...(isDownloadable ? {} : styles.disabledButton),
+                                }}
+                                onClick={() => downloadReportExcel(report)}
+                                disabled={!isDownloadable}
+                                title={
+                                  isDownloadable
+                                    ? 'Export report sebagai Excel'
                                     : 'Laporan masih diproses'
                                 }
                               >
                                 <FileSpreadsheet size={15} />
-                                CSV
+                                Excel
                               </button>
+
                               <button
                                 type="button"
                                 style={{
@@ -420,12 +447,12 @@ const styles: { [key: string]: React.CSSProperties } = {
     border: 'none',
     borderRadius: '12px',
     padding: '10px 14px',
-    backgroundColor: '#1d4ed8',
-    color: '#ffffff',
     fontSize: '13px',
     fontWeight: 700,
     cursor: 'pointer',
   },
+  pdfButton: { backgroundColor: '#0f172a', color: '#ffffff' },
+  excelButton: { backgroundColor: '#166534', color: '#ffffff' },
   loadingBox: { display: 'flex', justifyContent: 'center', padding: '40px 0' },
   emptyText: {
     margin: 0,
@@ -490,7 +517,8 @@ const styles: { [key: string]: React.CSSProperties } = {
     cursor: 'pointer',
     whiteSpace: 'nowrap',
   },
-  csvButton: { color: '#166534', borderColor: '#86efac', backgroundColor: '#f0fdf4' },
+  pdfActionButton: { color: '#0f172a', borderColor: '#cbd5e1', backgroundColor: '#f8fafc' },
+  excelActionButton: { color: '#166534', borderColor: '#86efac', backgroundColor: '#f0fdf4' },
   jsonButton: { color: '#1d4ed8', borderColor: '#93c5fd', backgroundColor: '#eff6ff' },
   disabledButton: { opacity: 0.55, cursor: 'not-allowed' },
 };
