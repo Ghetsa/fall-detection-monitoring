@@ -2,7 +2,7 @@ import { useState, useEffect, CSSProperties, useCallback } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import {
   Users, Plus, Edit2, Trash2, X, Save, User, Phone,
-  Calendar, Heart, Cpu, AlertCircle, Search, ChevronDown, Activity, Loader,
+  Calendar, Heart, Cpu, AlertCircle, Search, ChevronDown, Activity, Loader, Filter,
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { getLansiaByCustomer, addLansia, updateLansia, deleteLansia } from '../../services/lansiaService';
@@ -158,16 +158,32 @@ export default function CustomerLansiaView() {
             <Search size={16} color="#94a3b8" style={{ flexShrink: 0 }} />
             <input style={styles.searchInput} placeholder="Cari nama atau serial device..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
           </div>
-          <div style={styles.filterWrap}>
-            <ChevronDown size={14} color="#64748b" style={{ position: 'absolute', right: 12, pointerEvents: 'none' }} />
-            <select style={styles.filterSelect} value={filterStatus} onChange={(e) => setFilterStatus(e.target.value as typeof filterStatus)}>
+          <div style={{ ...styles.filterWrap, ...(isMobile ? styles.filterWrapMobile : {}) }}>
+            {isMobile ? (
+              <Filter size={16} color="#334155" style={styles.filterIconMobile} />
+            ) : (
+              <ChevronDown size={14} color="#64748b" style={{ position: 'absolute', right: 12, pointerEvents: 'none' }} />
+            )}
+            <select
+              aria-label="Filter status lansia"
+              title="Filter status lansia"
+              style={{ ...styles.filterSelect, ...(isMobile ? styles.filterSelectMobile : {}) }}
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value as typeof filterStatus)}
+            >
               <option value="Semua">Semua Status</option>
               <option value="Aktif">Aktif</option>
               <option value="Nonaktif">Nonaktif</option>
             </select>
           </div>
-          <button style={styles.addButton} onClick={openAdd}>
-            <Plus size={16} /><span>Tambah Lansia</span>
+          <button
+            style={{ ...styles.addButton, ...(isMobile ? styles.addButtonMobile : {}) }}
+            onClick={openAdd}
+            aria-label="Tambah Lansia"
+            title="Tambah Lansia"
+          >
+            <Plus size={16} />
+            {!isMobile && <span>Tambah Lansia</span>}
           </button>
         </div>
 
@@ -203,7 +219,9 @@ export default function CustomerLansiaView() {
                         <div><p style={styles.nameText}>{lansia.nama}</p><p style={styles.genderText}>{lansia.jenisKelamin}</p></div>
                       </div>
                     </td>
-                    <td style={styles.td}><span style={styles.ageBadge}>{lansia.usia} th</span></td>
+                    <td style={{ ...styles.td, ...(isMobile ? styles.ageCellMobile : {}) }}>
+                      <span style={{ ...styles.ageBadge, ...(isMobile ? styles.ageBadgeMobile : {}) }}>{lansia.usia} th</span>
+                    </td>
                     <td style={styles.td}><span style={styles.cellText}>{lansia.noHp}</span></td>
                     <td style={styles.td}>
                       <p style={styles.cellText}>{lansia.namaKontakDarurat}</p>
@@ -402,7 +420,11 @@ const styles: Record<string, CSSProperties> = {
   searchWrap: { flex: 1, minWidth: '200px', display: 'flex', alignItems: 'center', gap: '10px', backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '0 14px', height: '44px' },
   searchInput: { flex: 1, border: 'none', outline: 'none', fontSize: '14px', color: '#0f172a', backgroundColor: 'transparent' },
   filterWrap: { position: 'relative', display: 'flex', alignItems: 'center' },
+  filterWrapMobile: { width: '44px', minWidth: '44px', height: '44px', justifyContent: 'center', border: '1px solid #e2e8f0', borderRadius: '12px', backgroundColor: '#ffffff', overflow: 'hidden' },
+  filterIconMobile: { position: 'absolute', pointerEvents: 'none' },
   filterSelect: { height: '44px', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '0 36px 0 14px', fontSize: '14px', color: '#334155', fontWeight: 600, backgroundColor: '#ffffff', cursor: 'pointer', outline: 'none', appearance: 'none' },
+  filterSelectMobile: { position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none', padding: 0, opacity: 0, color: 'transparent' },
+  addButtonMobile: { width: '44px', minWidth: '44px', padding: 0, justifyContent: 'center' },
   addButton: { display: 'inline-flex', alignItems: 'center', gap: '8px', backgroundColor: '#2563eb', color: '#ffffff', border: 'none', borderRadius: '12px', padding: '0 20px', height: '44px', fontSize: '14px', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' },
   tableCard: { backgroundColor: '#ffffff', borderRadius: '22px', padding: '24px', boxShadow: '0 4px 20px rgba(15,23,42,0.06)', border: '1px solid #e2e8f0', marginTop: '20px', overflow: 'hidden' },
   tableHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' },
@@ -414,6 +436,7 @@ const styles: Record<string, CSSProperties> = {
   th: { padding: '12px 14px', textAlign: 'left', fontSize: '13px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' },
   tr: { borderBottom: '1px solid #f1f5f9' },
   td: { padding: '14px 14px', fontSize: '14px', color: '#334155' },
+  ageCellMobile: { minWidth: '88px' },
   emptyCell: { padding: '48px 24px' },
   emptyState: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' },
   emptyText: { margin: 0, fontSize: '15px', color: '#94a3b8', fontWeight: 600 },
@@ -422,6 +445,7 @@ const styles: Record<string, CSSProperties> = {
   nameText: { margin: 0, fontSize: '14px', fontWeight: 700, color: '#0f172a' },
   genderText: { margin: '2px 0 0', fontSize: '12px', color: '#94a3b8' },
   ageBadge: { backgroundColor: '#f1f5f9', color: '#475569', padding: '4px 10px', borderRadius: '8px', fontSize: '13px', fontWeight: 700 },
+  ageBadgeMobile: { display: 'inline-flex', minWidth: '64px', justifyContent: 'center', whiteSpace: 'nowrap' },
   cellText: { margin: 0, fontSize: '13px', color: '#334155', fontWeight: 600 },
   cellSubtext: { margin: '2px 0 0', fontSize: '12px', color: '#94a3b8' },
   deviceBadge: { backgroundColor: '#f5f3ff', color: '#6d28d9', padding: '4px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: 700, fontFamily: 'monospace' },
