@@ -1,3 +1,4 @@
+// src/views/customer/CustomerEmergencyView.tsx
 import { useState, useEffect, useCallback } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import { Smartphone, Users, Siren, ShieldCheck, Loader, Save } from 'lucide-react';
