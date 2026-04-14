@@ -2,18 +2,18 @@ import {
   createUserWithEmailAndPassword,
   deleteUser,
   signInWithEmailAndPassword,
-  signInWithPopup,
   signOut,
   updateProfile,
   UserCredential,
 } from 'firebase/auth';
+import { signOut as nextAuthSignOut } from 'next-auth/react';
 import {
   doc,
   getDoc,
   serverTimestamp,
   setDoc,
 } from 'firebase/firestore';
-import { auth, db, googleProvider } from './firebase';
+import { auth, db } from './firebase';
 
 type RegisterPayload = {
   fullName: string;
@@ -33,7 +33,7 @@ type LoginResult = {
   redirectTo: string;
 };
 
-function setAuthCookies(role: 'admin' | 'customer') {
+export function setAuthCookies(role: 'admin' | 'customer') {
   if (typeof document === 'undefined') return;
 
   const maxAge = 60 * 60 * 8;
@@ -41,7 +41,7 @@ function setAuthCookies(role: 'admin' | 'customer') {
   document.cookie = `anti_fall_role=${role}; Path=/; Max-Age=${maxAge}; SameSite=Lax`;
 }
 
-function clearAuthCookies() {
+export function clearAuthCookies() {
   if (typeof document === 'undefined') return;
 
   document.cookie = 'anti_fall_session=; Path=/; Max-Age=0; SameSite=Lax';
@@ -157,29 +157,8 @@ export async function loginWithEmail({
   };
 }
 
-export async function loginWithGoogle(): Promise<LoginResult> {
-  googleProvider.setCustomParameters({
-    prompt: 'select_account',
-  });
-
-  const userCredential = await signInWithPopup(auth, googleProvider);
-  const user = userCredential.user;
-  const role = await getUserRoleAndEnsureProfile(user.uid, {
-    fullName: user.displayName,
-    email: user.email,
-    role: 'customer',
-  });
-
-  setAuthCookies(role);
-
-  return {
-    userCredential,
-    role,
-    redirectTo: role === 'admin' ? '/admin/dashboard' : '/customer/dashboard',
-  };
-}
-
 export async function logoutUser() {
-  await signOut(auth);
+  await signOut(auth).catch(() => undefined);
+  await nextAuthSignOut({ redirect: false }).catch(() => undefined);
   clearAuthCookies();
 }

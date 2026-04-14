@@ -1,13 +1,38 @@
 import Head from 'next/head';
 import { FirebaseError } from 'firebase/app';
 import Link from 'next/link';
+import { signIn, useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import { FormEvent, useState } from 'react';
-import { loginWithEmail, loginWithGoogle } from '../../lib/auth';
+import { FormEvent, useEffect, useState } from 'react';
+import { clearAuthCookies, loginWithEmail, setAuthCookies } from '../../lib/auth';
 import { showErrorAlert, showSuccessAlert } from '../../lib/alerts';
+
+function GoogleIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+      <path
+        fill="#FFC107"
+        d="M43.6 20.5H42V20H24v8h11.3C33.6 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12S17.4 12 24 12c3 0 5.7 1.1 7.8 3l5.7-5.7C34.1 6.1 29.3 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.2-.1-2.3-.4-3.5Z"
+      />
+      <path
+        fill="#FF3D00"
+        d="M6.3 14.7l6.6 4.8C14.7 15 18.9 12 24 12c3 0 5.7 1.1 7.8 3l5.7-5.7C34.1 6.1 29.3 4 24 4c-7.7 0-14.3 4.3-17.7 10.7Z"
+      />
+      <path
+        fill="#4CAF50"
+        d="M24 44c5.2 0 10-2 13.5-5.2l-6.2-5.2C29.3 35.1 26.8 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.5 16.2 44 24 44Z"
+      />
+      <path
+        fill="#1976D2"
+        d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.2 5.6l.1-.1 6.2 5.2C37 38.4 44 33 44 24c0-1.2-.1-2.3-.4-3.5Z"
+      />
+    </svg>
+  );
+}
 
 export default function LoginView() {
   const router = useRouter();
+  const { data: session, status } = useSession();
 
   const [form, setForm] = useState({
     email: '',
@@ -28,6 +53,33 @@ export default function LoginView() {
 
     return fallback;
   };
+
+  useEffect(() => {
+    const oauthProvider = router.query.oauth;
+
+    if (
+      status !== 'authenticated' ||
+      oauthProvider !== 'google' ||
+      !session.user?.role
+    ) {
+      return;
+    }
+
+    const targetRole = session.user.role === 'admin' ? 'admin' : 'customer';
+    const redirectTo =
+      targetRole === 'admin' ? '/admin/dashboard' : '/customer/dashboard';
+
+    setAuthCookies(targetRole);
+    void showSuccessAlert('Login Google berhasil');
+    void router.replace(redirectTo);
+  }, [router, session, status]);
+
+  useEffect(() => {
+    if (router.query.error) {
+      clearAuthCookies();
+      setError('Login dengan Google gagal. Silakan coba lagi.');
+    }
+  }, [router.query.error]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -56,21 +108,16 @@ export default function LoginView() {
 
   const handleGoogleLogin = async () => {
     setError('');
+    clearAuthCookies();
 
     try {
       setLoading(true);
-
-      const result = await loginWithGoogle();
-
-      await showSuccessAlert('Login Google berhasil');
-
-      router.push(result.redirectTo);
+      await signIn('google', {
+        callbackUrl: `${window.location.origin}/auth/login?oauth=google`,
+      });
     } catch (err: unknown) {
       console.error(err);
-      const message =
-        err instanceof FirebaseError && err.code === 'auth/popup-closed-by-user'
-          ? 'Popup login Google ditutup sebelum proses selesai.'
-          : getErrorMessage(err, 'Login dengan Google gagal.');
+      const message = getErrorMessage(err, 'Login dengan Google gagal.');
       setError(message);
       await showErrorAlert('Login Google gagal', message);
     } finally {
@@ -163,7 +210,9 @@ export default function LoginView() {
               onClick={handleGoogleLogin}
               disabled={loading}
             >
-              <span style={styles.googleIcon}>G</span>
+              <span style={styles.googleIcon}>
+                <GoogleIcon />
+              </span>
               {loading ? 'Memproses...' : 'Masuk dengan Google'}
             </button>
 
@@ -345,14 +394,10 @@ const styles: { [key: string]: React.CSSProperties } = {
   googleIcon: {
     width: '24px',
     height: '24px',
-    borderRadius: '999px',
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#f8fafc',
-    color: '#ea4335',
-    fontWeight: 800,
-    fontSize: '14px',
+    flexShrink: 0,
   },
   bottomText: {
     marginTop: '20px',

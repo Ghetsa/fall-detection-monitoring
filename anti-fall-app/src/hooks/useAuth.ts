@@ -7,11 +7,16 @@ import {
   useMemo,
   useState,
 } from 'react';
-import { onAuthStateChanged, User } from 'firebase/auth';
+import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
+import { useSession } from 'next-auth/react';
 import { auth, db } from '../lib/firebase';
 
-type AuthUser = User & {
+type AuthUser = {
+  uid: string;
+  displayName: string | null;
+  email: string | null;
+  photoURL: string | null;
   role?: 'admin' | 'customer';
 };
 
@@ -24,40 +29,69 @@ type UseAuthReturn = {
 const AuthContext = createContext<UseAuthReturn | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [role, setRole] = useState<'admin' | 'customer' | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [firebaseUser, setFirebaseUser] = useState<AuthUser | null>(null);
+  const [firebaseRole, setFirebaseRole] = useState<'admin' | 'customer' | null>(
+    null
+  );
+  const [firebaseLoading, setFirebaseLoading] = useState(true);
+  const { data: session, status } = useSession();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        // Fetch role from Firestore
         try {
           const userRef = doc(db, 'users', firebaseUser.uid);
           const snap = await getDoc(userRef);
           const userData = snap.data();
           const userRole: 'admin' | 'customer' =
             userData?.role === 'admin' ? 'admin' : 'customer';
-          setRole(userRole);
-          const enriched = Object.assign(firebaseUser, { role: userRole });
-          setUser(enriched);
+          setFirebaseRole(userRole);
+          setFirebaseUser({
+            uid: firebaseUser.uid,
+            displayName: firebaseUser.displayName,
+            email: firebaseUser.email,
+            photoURL: firebaseUser.photoURL,
+            role: userRole,
+          });
         } catch {
-          setUser(firebaseUser);
-          setRole('customer');
+          setFirebaseUser({
+            uid: firebaseUser.uid,
+            displayName: firebaseUser.displayName,
+            email: firebaseUser.email,
+            photoURL: firebaseUser.photoURL,
+            role: 'customer',
+          });
+          setFirebaseRole('customer');
         }
       } else {
-        setUser(null);
-        setRole(null);
+        setFirebaseUser(null);
+        setFirebaseRole(null);
       }
-      setLoading(false);
+      setFirebaseLoading(false);
     });
 
     return () => unsubscribe();
   }, []);
 
+  const loading = firebaseLoading || status === 'loading';
+  const sessionRole =
+    session?.user?.role === 'admin' ? 'admin' : session?.user ? 'customer' : null;
+  const sessionUser: AuthUser | null =
+    status === 'authenticated' && session.user?.email
+      ? {
+          uid: session.user.uid || session.user.email.toLowerCase(),
+          displayName: session.user.fullname || session.user.name || 'User',
+          email: session.user.email,
+          photoURL: session.user.image || null,
+          role: sessionRole || 'customer',
+        }
+      : null;
+  const user = firebaseUser || sessionUser;
+  const role = firebaseRole || sessionRole;
+
   const value = useMemo(
     () => ({ user, role, loading }),
-    [user, role, loading]
+    [loading, role, user]
   );
 
   return createElement(AuthContext.Provider, { value }, children);

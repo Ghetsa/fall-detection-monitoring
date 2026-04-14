@@ -18,13 +18,14 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL('/auth/login', request.url));
   }
 
-  if (isAdminRoute && role !== 'admin') {
+  // Avoid same-path redirect loops while the client is still hydrating auth cookies.
+  if (isAdminRoute && role === 'customer') {
     return NextResponse.redirect(
       new URL(getDashboardByRole(role), request.url)
     );
   }
 
-  if (isCustomerRoute && role !== 'customer') {
+  if (isCustomerRoute && role === 'admin') {
     return NextResponse.redirect(
       new URL(getDashboardByRole(role), request.url)
     );

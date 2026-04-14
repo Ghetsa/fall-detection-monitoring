@@ -2,12 +2,10 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useEffect, useRef, useState, CSSProperties } from 'react';
 import { useRouter } from 'next/router';
-import { onAuthStateChanged, User } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
-import { auth, db } from '../../lib/firebase';
 import { logoutUser } from '../../lib/auth';
 import { Menu, X, User as UserIcon, LogOut, ChevronDown } from 'lucide-react';
 import { showErrorAlert, showSuccessAlert } from '../../lib/alerts';
+import { useAuth } from '../../hooks/useAuth';
 
 type UserProfile = {
   fullName?: string;
@@ -32,52 +30,10 @@ export default function Navbar({
   subtitle = 'Monitoring lansia secara real-time',
 }: NavbarProps) {
   const router = useRouter();
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user: currentUser, role } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
 
   const profileMenuRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setCurrentUser(user);
-
-      if (!user) {
-        setProfile(null);
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const userRef = doc(db, 'users', user.uid);
-        const userSnap = await getDoc(userRef);
-
-        if (userSnap.exists()) {
-          setProfile(userSnap.data() as UserProfile);
-        } else {
-          setProfile({
-            fullName: user.displayName || 'User',
-            email: user.email || '',
-            role: 'customer',
-            photoURL: user.photoURL || '',
-          });
-        }
-      } catch (error) {
-        console.error('Gagal mengambil profile user:', error);
-        setProfile({
-          fullName: user.displayName || 'User',
-          email: user.email || '',
-          role: 'customer',
-          photoURL: user.photoURL || '',
-        });
-      } finally {
-        setLoading(false);
-      }
-    });
-
-    return () => unsubscribe();
-  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -105,8 +61,17 @@ export default function Navbar({
     }
   };
 
-  const userName = profile?.fullName || currentUser?.displayName || 'User';
-  const userEmail = profile?.email || currentUser?.email || '';
+  const profile: UserProfile | null = currentUser
+    ? {
+        fullName: currentUser.displayName || 'User',
+        email: currentUser.email || '',
+        role: role || 'customer',
+        photoURL: currentUser.photoURL || '',
+      }
+    : null;
+
+  const userName = profile?.fullName || 'User';
+  const userEmail = profile?.email || '';
   const userRole = profile?.role || 'customer';
 
   const profileRoute =
@@ -166,7 +131,7 @@ export default function Navbar({
             ...(isMobile ? styles.rightSectionMobile : {}),
           }}
         >
-          {!loading && currentUser ? (
+          {currentUser ? (
             <div
               ref={profileMenuRef}
               style={{
@@ -243,7 +208,7 @@ export default function Navbar({
                 </div>
               )}
             </div>
-          ) : !loading ? (
+          ) : (
             <>
               <Link
                 href="/auth/login"
@@ -265,8 +230,6 @@ export default function Navbar({
                 Register
               </Link>
             </>
-          ) : (
-            <span style={styles.loadingText}>Loading...</span>
           )}
         </div>
       </div>
@@ -540,9 +503,5 @@ const styles: Record<string, CSSProperties> = {
   },
   authButtonMobile: {
     width: '100%',
-  },
-  loadingText: {
-    color: '#64748b',
-    fontSize: '14px',
   },
 };
