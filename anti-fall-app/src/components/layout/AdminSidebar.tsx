@@ -7,11 +7,13 @@ import {
   TriangleAlert,
   Megaphone,
   FileBarChart2,
+  Cpu,
 } from 'lucide-react';
 
 const menuItems = [
   { label: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
   { label: 'Users', href: '/admin/users', icon: Users },
+  { label: 'Devices', href: '/admin/devices', icon: Cpu },
   { label: 'Incidents', href: '/admin/incidents', icon: TriangleAlert },
   { label: 'Broadcasts', href: '/admin/broadcasts', icon: Megaphone },
   { label: 'Reports', href: '/admin/reports', icon: FileBarChart2 },
@@ -231,7 +233,7 @@ const styles: Record<string, CSSProperties> = {
     bottom: 'max(12px, env(safe-area-inset-bottom))',
     zIndex: 110,
     display: 'grid',
-    gridTemplateColumns: 'repeat(5, minmax(0, 1fr))',
+    gridTemplateColumns: 'repeat(6, minmax(0, 1fr))',
     gap: '8px',
     padding: '10px 10px calc(10px + env(safe-area-inset-bottom))',
     backgroundColor: 'rgba(255,255,255,0.96)',

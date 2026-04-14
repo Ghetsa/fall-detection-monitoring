@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { getLansiaByCustomer, addLansia, updateLansia, deleteLansia } from '../../services/lansiaService';
-import { getAllDevices, getDevicesByCustomer } from '../../services/deviceService';
+import { getAllDevices } from '../../services/deviceService';
 import { Device } from '../../types/device';
 import { Lansia, LansiaFormData } from '../../types/lansia';
 import { useIsMobile } from '../../hooks/useIsMobile';
@@ -46,12 +46,10 @@ export default function CustomerLansiaView() {
     if (!user) return;
     setLoading(true);
     try {
-      const [data, customerDevices] = await Promise.all([
+      const [data, deviceData] = await Promise.all([
         getLansiaByCustomer(user.uid),
-        getDevicesByCustomer(user.uid),
+        getAllDevices(),
       ]);
-      const deviceData =
-        customerDevices.length > 0 ? customerDevices : await getAllDevices();
       setLansiaList(data);
       setDevices(deviceData);
     } finally {
@@ -136,6 +134,23 @@ export default function CustomerLansiaView() {
 
   const totalAktif = lansiaList.filter((l) => l.status === 'Aktif').length;
   const totalNonaktif = lansiaList.filter((l) => l.status === 'Nonaktif').length;
+  const currentEditingDeviceKey = editTarget
+    ? editTarget.deviceSerial || editTarget.deviceId
+    : form.deviceSerial || form.deviceId;
+  const usedDeviceKeys = new Set(
+    lansiaList
+      .filter((l) => (editTarget ? l.id !== editTarget.id : true))
+      .flatMap((l) => [l.deviceSerial, l.deviceId])
+      .filter(Boolean)
+  );
+  const availableDevices = devices.filter((device) => {
+    const isUsedByDeviceDoc = Boolean(device.lansiaId && device.lansiaId.trim());
+    const isUsedByLansia = usedDeviceKeys.has(device.serial) || usedDeviceKeys.has(device.id);
+    const isCurrentSelection =
+      currentEditingDeviceKey === device.serial || currentEditingDeviceKey === device.id;
+
+    return isCurrentSelection || (!isUsedByDeviceDoc && !isUsedByLansia);
+  });
 
   return (
     <DashboardLayout role="customer" title="Kelola Lansia" subtitle="Manajemen data lansia yang dipantau">
@@ -307,9 +322,9 @@ export default function CustomerLansiaView() {
                       onChange={(e) => handleDeviceChange(e.target.value)}
                     >
                       <option value="">
-                        {devices.length > 0 ? 'Pilih serial device' : 'Belum ada device tersedia'}
+                        {availableDevices.length > 0 ? 'Pilih serial device' : 'Belum ada device tersedia'}
                       </option>
-                      {devices.map((device) => (
+                      {availableDevices.map((device) => (
                         <option key={device.id} value={device.serial}>
                           {device.serial}
                         </option>

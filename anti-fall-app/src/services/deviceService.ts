@@ -5,6 +5,8 @@ import {
   getDocs,
   doc,
   getDoc,
+  serverTimestamp,
+  setDoc,
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { Device } from '../types/device';
@@ -35,4 +37,20 @@ export async function getDeviceByLansiaId(lansiaId: string): Promise<Device | nu
   if (snap.empty) return null;
   const d = snap.docs[0];
   return { id: d.id, ...d.data() } as Device;
+}
+
+export async function addDevice(
+  data: Omit<Device, 'id' | 'createdAt'>
+): Promise<string> {
+  const serial = data.serial.trim();
+  await setDoc(
+    doc(db, COL, serial),
+    {
+      ...data,
+      serial,
+      createdAt: serverTimestamp(),
+    },
+    { merge: true }
+  );
+  return serial;
 }
