@@ -73,7 +73,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => unsubscribe();
   }, []);
 
-  const loading = firebaseLoading || status === 'loading';
   const sessionRole =
     session?.user?.role === 'admin' ? 'admin' : session?.user ? 'customer' : null;
   const sessionUser: AuthUser | null =
@@ -88,6 +87,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       : null;
   const user = firebaseUser || sessionUser;
   const role = firebaseRole || sessionRole;
+  const loading =
+    !user && !role && firebaseLoading && status === 'loading';
 
   const value = useMemo(
     () => ({ user, role, loading }),

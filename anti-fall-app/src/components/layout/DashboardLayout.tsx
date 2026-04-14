@@ -21,14 +21,22 @@ export default function DashboardLayout({
   title,
   subtitle,
 }: DashboardLayoutProps) {
+  const getIsMobile = () => {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+
+    return window.innerWidth < 992;
+  };
+
   const router = useRouter();
   const { user, role: userRole, loading: authLoading } = useAuth();
-  const [collapsed, setCollapsed] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(getIsMobile);
+  const [collapsed, setCollapsed] = useState(() => getIsMobile());
 
   useEffect(() => {
     const handleResize = () => {
-      const mobile = window.innerWidth < 992;
+      const mobile = getIsMobile();
       setIsMobile(mobile);
 
       if (mobile) {
@@ -69,7 +77,10 @@ export default function DashboardLayout({
       ? 'Monitoring sistem dan aktivitas pengguna'
       : 'Monitoring lansia secara real-time');
 
-  if (authLoading || !user || (userRole !== null && userRole !== role)) {
+  const shouldShowGuard =
+    authLoading || !user || (userRole !== null && userRole !== role);
+
+  if (shouldShowGuard) {
     return (
       <div style={styles.guardPage}>
         <div style={styles.guardCard}>

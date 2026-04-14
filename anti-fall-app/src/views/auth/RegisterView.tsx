@@ -254,7 +254,8 @@ const styles: { [key: string]: React.CSSProperties } = {
       'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
   },
   pageMobile: {
-    alignItems: 'flex-start',
+    alignItems: 'center',
+    justifyContent: 'center',
     padding: '16px',
   },
   card: {
