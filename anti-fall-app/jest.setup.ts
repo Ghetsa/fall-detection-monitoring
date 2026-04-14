@@ -41,7 +41,12 @@ Object.assign(global, {
 
 jest.mock('next/image', () => ({
   __esModule: true,
-  default: (props) => {
+  default: (
+    props: React.ImgHTMLAttributes<HTMLImageElement> & {
+      priority?: boolean;
+      fill?: boolean;
+    }
+  ) => {
     const { priority, fill, ...rest } = props;
     return React.createElement('img', rest);
   },
