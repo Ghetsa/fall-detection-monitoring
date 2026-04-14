@@ -3,10 +3,15 @@ import DashboardLayout from '../../components/layout/DashboardLayout';
 import { TriangleAlert, ShieldAlert, Clock3, Filter, Loader, Search } from 'lucide-react';
 import { getAllIncidents } from '../../services/incidentService';
 import { Incident } from '../../types/incident';
+import { useIsMobile } from '../../hooks/useIsMobile';
 
-function formatTimestamp(ts: any): string {
+function formatTimestamp(ts: unknown): string {
   if (!ts) return '—';
-  const date: Date = ts.toDate ? ts.toDate() : new Date(ts);
+  const value = ts as { toDate?: () => Date } | string | number | Date;
+  const date: Date =
+    typeof value === 'object' && value !== null && 'toDate' in value && typeof value.toDate === 'function'
+      ? value.toDate()
+      : new Date(value as string | number | Date);
   return date.toLocaleString('id-ID', {
     day: 'numeric', month: 'short', year: 'numeric',
     hour: '2-digit', minute: '2-digit',
@@ -22,6 +27,7 @@ const typeLabels: Record<string, string> = {
 };
 
 export default function AdminIncidentsView() {
+  const isMobile = useIsMobile();
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -74,7 +80,7 @@ export default function AdminIncidentsView() {
           </div>
         </div>
 
-        <div style={styles.summaryGrid}>
+        <div style={{ ...styles.summaryGrid, ...(isMobile ? styles.singleColumnGrid : {}) }}>
           <div style={styles.summaryCard}>
             <span style={styles.summaryIconDanger}><ShieldAlert size={18} /></span>
             <div>
@@ -186,6 +192,7 @@ const styles: { [key: string]: React.CSSProperties } = {
   heroText: { margin: 0, fontSize: '15px', lineHeight: 1.7, color: 'rgba(255,255,255,0.92)' },
   heroBadge: { backgroundColor: '#ffffff', color: '#1d4ed8', padding: '12px 18px', borderRadius: '999px', fontWeight: 800, display: 'inline-flex', gap: '8px', alignItems: 'center' },
   summaryGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginTop: '24px' },
+  singleColumnGrid: { gridTemplateColumns: '1fr' },
   summaryCard: { backgroundColor: '#ffffff', borderRadius: '20px', padding: '22px', boxShadow: '0 10px 25px rgba(15,23,42,0.05)', border: '1px solid #e2e8f0', display: 'flex', gap: '14px', alignItems: 'center' },
   summaryIconDanger: { width: '42px', height: '42px', borderRadius: '12px', backgroundColor: '#fee2e2', color: '#b91c1c', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   summaryIconWarning: { width: '42px', height: '42px', borderRadius: '12px', backgroundColor: '#fef3c7', color: '#92400e', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 },

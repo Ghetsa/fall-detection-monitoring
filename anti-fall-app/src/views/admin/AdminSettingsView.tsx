@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import { showSuccessAlert } from '../../lib/alerts';
+import { useIsMobile } from '../../hooks/useIsMobile';
 import {
   Settings,
   Bell,
@@ -11,6 +12,7 @@ import {
 } from 'lucide-react';
 
 export default function AdminSettingsView() {
+  const isMobile = useIsMobile();
   const [systemName, setSystemName] = useState('Anti Fall App');
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [emailNotification, setEmailNotification] = useState(true);
@@ -44,7 +46,7 @@ export default function AdminSettingsView() {
           </div>
         </div>
 
-        <div style={styles.grid}>
+        <div style={{ ...styles.grid, ...(isMobile ? styles.singleColumnGrid : {}) }}>
           <div style={styles.mainCard}>
             <div style={styles.sectionHeader}>
               <h3 style={styles.sectionTitle}>Pengaturan Umum</h3>
@@ -325,6 +327,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     gap: '20px',
     marginTop: '24px',
   },
+  singleColumnGrid: { gridTemplateColumns: '1fr' },
   mainCard: {
     backgroundColor: '#ffffff',
     borderRadius: '22px',

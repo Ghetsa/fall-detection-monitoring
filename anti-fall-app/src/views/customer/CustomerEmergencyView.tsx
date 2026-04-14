@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import { Smartphone, Users, Siren, ShieldCheck, Loader, Save } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
@@ -10,8 +10,10 @@ import {
 } from '../../services/emergencyService';
 import { Lansia } from '../../types/lansia';
 import { Emergency } from '../../types/emergency';
+import { useIsMobile } from '../../hooks/useIsMobile';
 
 export default function CustomerEmergencyView() {
+  const isMobile = useIsMobile();
   const { user } = useAuth();
   const [lansiaList, setLansiaList] = useState<Lansia[]>([]);
   const [emergencyList, setEmergencyList] = useState<Emergency[]>([]);
@@ -23,7 +25,7 @@ export default function CustomerEmergencyView() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     try {
@@ -39,9 +41,9 @@ export default function CustomerEmergencyView() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedLansiaId, user]);
 
-  useEffect(() => { loadData(); }, [user]);
+  useEffect(() => { loadData(); }, [loadData]);
 
   // Pre-fill form when lansia selection changes
   useEffect(() => {
@@ -131,7 +133,7 @@ export default function CustomerEmergencyView() {
           </div>
         )}
 
-        <div style={styles.grid}>
+        <div style={{ ...styles.grid, ...(isMobile ? styles.singleColumnGrid : {}) }}>
           <div style={styles.formCard}>
             <div style={styles.cardHeader}>
               <h3 style={styles.cardTitle}>
@@ -250,6 +252,7 @@ const styles: { [key: string]: React.CSSProperties } = {
   selectorRow: { display: 'flex', gap: '10px', marginTop: '16px', flexWrap: 'wrap' },
   selectorBtn: { borderRadius: '10px', padding: '8px 16px', fontSize: '14px', fontWeight: 700, cursor: 'pointer' },
   grid: { display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '20px', marginTop: '24px' },
+  singleColumnGrid: { gridTemplateColumns: '1fr' },
   formCard: { backgroundColor: '#ffffff', borderRadius: '22px', padding: '24px', boxShadow: '0 10px 25px rgba(15,23,42,0.05)', border: '1px solid #e2e8f0' },
   infoCard: { backgroundColor: '#ffffff', borderRadius: '22px', padding: '24px', boxShadow: '0 10px 25px rgba(15,23,42,0.05)', border: '1px solid #e2e8f0' },
   cardHeader: { marginBottom: '20px' },

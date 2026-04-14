@@ -27,6 +27,7 @@ import {
   updateUserRole,
 } from '../../services/userService';
 import { AppUser, AppUserFormData } from '../../types/user';
+import { useIsMobile } from '../../hooks/useIsMobile';
 
 const emptyForm: AppUserFormData = {
   uid: '',
@@ -49,6 +50,7 @@ function generateUserId(email: string) {
 }
 
 export default function AdminUsersView() {
+  const isMobile = useIsMobile();
   const [users, setUsers] = useState<AppUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -241,7 +243,7 @@ export default function AdminUsersView() {
           </div>
         </div>
 
-        <div style={styles.summaryGrid}>
+        <div style={{ ...styles.summaryGrid, ...(isMobile ? styles.singleColumnGrid : {}) }}>
           <div style={styles.summaryCard}>
             <span style={styles.summaryIcon}><Users size={18} /></span>
             <div>
@@ -415,7 +417,7 @@ export default function AdminUsersView() {
               </button>
             </div>
             <div style={styles.modalBody}>
-              <div style={styles.formGrid}>
+              <div style={{ ...styles.formGrid, ...(isMobile ? styles.singleColumnGrid : {}) }}>
                 {([
                   { label: 'Nama Lengkap *', key: 'fullName', icon: <User size={15} />, type: 'text', placeholder: 'Nama lengkap user' },
                   { label: 'Email *', key: 'email', icon: <Mail size={15} />, type: 'email', placeholder: 'user@email.com' },
@@ -581,6 +583,7 @@ const styles: { [key: string]: React.CSSProperties } = {
   heroText: { margin: 0, fontSize: '15px', lineHeight: 1.7, color: 'rgba(255,255,255,0.92)' },
   heroBadge: { backgroundColor: '#ffffff', color: '#1d4ed8', padding: '12px 18px', borderRadius: '999px', fontWeight: 800, display: 'inline-flex', gap: '8px', alignItems: 'center' },
   summaryGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginTop: '24px' },
+  singleColumnGrid: { gridTemplateColumns: '1fr' },
   summaryCard: { backgroundColor: '#ffffff', borderRadius: '20px', padding: '22px', boxShadow: '0 10px 25px rgba(15,23,42,0.05)', border: '1px solid #e2e8f0', display: 'flex', gap: '14px', alignItems: 'center' },
   summaryIcon: { width: '42px', height: '42px', borderRadius: '12px', backgroundColor: '#eff6ff', color: '#1d4ed8', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   summaryIconGreen: { width: '42px', height: '42px', borderRadius: '12px', backgroundColor: '#dcfce7', color: '#166534', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 },

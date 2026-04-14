@@ -1,14 +1,19 @@
 import { useState, useEffect } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
-import { getAllUsers, getUsersByRole } from '../../services/userService';
+import { getAllUsers } from '../../services/userService';
 import { getAllDevices } from '../../services/deviceService';
 import { getRecentIncidents, getTodayIncidents } from '../../services/incidentService';
 import { Incident } from '../../types/incident';
 import { Loader } from 'lucide-react';
+import { useIsMobile } from '../../hooks/useIsMobile';
 
-function formatTimestamp(ts: any): string {
+function formatTimestamp(ts: unknown): string {
   if (!ts) return '—';
-  const date: Date = ts.toDate ? ts.toDate() : new Date(ts);
+  const value = ts as { toDate?: () => Date } | string | number | Date;
+  const date: Date =
+    typeof value === 'object' && value !== null && 'toDate' in value && typeof value.toDate === 'function'
+      ? value.toDate()
+      : new Date(value as string | number | Date);
   return date.toLocaleString('id-ID', {
     day: 'numeric', month: 'short', year: 'numeric',
     hour: '2-digit', minute: '2-digit',
@@ -16,6 +21,7 @@ function formatTimestamp(ts: any): string {
 }
 
 export default function AdminDashboardView() {
+  const isMobile = useIsMobile();
   const [stats, setStats] = useState({ totalUsers: 0, devicesOnline: 0, incidentsToday: 0 });
   const [recentIncidents, setRecentIncidents] = useState<Incident[]>([]);
   const [loading, setLoading] = useState(true);
@@ -76,7 +82,7 @@ export default function AdminDashboardView() {
           </div>
         </div>
 
-        <div style={styles.cardGrid}>
+        <div style={{ ...styles.cardGrid, ...(isMobile ? styles.singleColumnGrid : {}) }}>
           <div style={styles.card}>
             <p style={styles.cardLabel}>Total Users</p>
             <h3 style={styles.cardValue}>{loading ? '—' : stats.totalUsers}</h3>
@@ -102,7 +108,7 @@ export default function AdminDashboardView() {
           </div>
         </div>
 
-        <div style={styles.bottomGrid}>
+        <div style={{ ...styles.bottomGrid, ...(isMobile ? styles.singleColumnGrid : {}) }}>
           <div style={styles.largeCard}>
             <div style={styles.sectionHeader}>
               <h3 style={styles.sectionTitle}>Recent Incidents</h3>
@@ -167,6 +173,7 @@ const styles: { [key: string]: React.CSSProperties } = {
   cardValue: { margin: '12px 0 10px', fontSize: '30px', fontWeight: 800, color: '#0f172a', wordBreak: 'break-word' },
   cardDescription: { margin: 0, fontSize: '14px', lineHeight: 1.7, color: '#475569' },
   bottomGrid: { display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '20px', marginTop: '24px' },
+  singleColumnGrid: { gridTemplateColumns: '1fr' },
   largeCard: { backgroundColor: '#ffffff', borderRadius: '22px', padding: '24px', boxShadow: '0 10px 25px rgba(15,23,42,0.05)', border: '1px solid #e2e8f0', minWidth: 0 },
   sectionHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', gap: '12px', flexWrap: 'wrap' },
   sectionTitle: { margin: 0, fontSize: '22px', fontWeight: 800, color: '#0f172a' },

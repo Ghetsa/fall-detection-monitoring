@@ -8,10 +8,15 @@ import { Lansia } from '../../types/lansia';
 import { Device } from '../../types/device';
 import { Incident } from '../../types/incident';
 import { Loader } from 'lucide-react';
+import { useIsMobile } from '../../hooks/useIsMobile';
 
-function formatTimestamp(ts: any): string {
+function formatTimestamp(ts: unknown): string {
   if (!ts) return '—';
-  const date: Date = ts.toDate ? ts.toDate() : new Date(ts);
+  const value = ts as { toDate?: () => Date } | string | number | Date;
+  const date: Date =
+    typeof value === 'object' && value !== null && 'toDate' in value && typeof value.toDate === 'function'
+      ? value.toDate()
+      : new Date(value as string | number | Date);
   return date.toLocaleString('id-ID', {
     day: 'numeric',
     month: 'long',
@@ -21,9 +26,13 @@ function formatTimestamp(ts: any): string {
   });
 }
 
-function timeAgo(ts: any): string {
+function timeAgo(ts: unknown): string {
   if (!ts) return '—';
-  const date: Date = ts.toDate ? ts.toDate() : new Date(ts);
+  const value = ts as { toDate?: () => Date } | string | number | Date;
+  const date: Date =
+    typeof value === 'object' && value !== null && 'toDate' in value && typeof value.toDate === 'function'
+      ? value.toDate()
+      : new Date(value as string | number | Date);
   const diff = Math.floor((Date.now() - date.getTime()) / 1000);
   if (diff < 60) return `${diff} detik yang lalu`;
   if (diff < 3600) return `${Math.floor(diff / 60)} menit yang lalu`;
@@ -32,6 +41,7 @@ function timeAgo(ts: any): string {
 }
 
 export default function CustomerDashboardView() {
+  const isMobile = useIsMobile();
   const { user } = useAuth();
   const [lansiaList, setLansiaList] = useState<Lansia[]>([]);
   const [device, setDevice] = useState<Device | null>(null);
@@ -71,7 +81,6 @@ export default function CustomerDashboardView() {
   );
   const statusLabel = hasActiveFall ? 'Bahaya!' : 'Safe';
   const statusColor = hasActiveFall ? '#b91c1c' : '#166534';
-  const statusBg = hasActiveFall ? '#fee2e2' : '#dcfce7';
   const statusDotColor = hasActiveFall ? '#ef4444' : '#22c55e';
 
   const severityStyle = (sev: string) => {
@@ -107,7 +116,7 @@ export default function CustomerDashboardView() {
           </div>
         </div>
 
-        <div style={styles.cardGrid}>
+        <div style={{ ...styles.cardGrid, ...(isMobile ? styles.singleColumnGrid : {}) }}>
           <div style={styles.card}>
             <p style={styles.cardLabel}>Status Saat Ini</p>
             <h3 style={{ ...styles.cardValue, color: loading ? '#94a3b8' : statusColor }}>
@@ -147,7 +156,7 @@ export default function CustomerDashboardView() {
           </div>
         </div>
 
-        <div style={styles.bottomGrid}>
+        <div style={{ ...styles.bottomGrid, ...(isMobile ? styles.singleColumnGrid : {}) }}>
           <div style={styles.largeCard}>
             <div style={styles.sectionHeader}>
               <h3 style={styles.sectionTitle}>Ringkasan Monitoring</h3>
@@ -226,6 +235,7 @@ const styles: { [key: string]: React.CSSProperties } = {
   cardValue: { margin: '12px 0 10px', fontSize: '30px', fontWeight: 800, color: '#0f172a', wordBreak: 'break-word' },
   cardDescription: { margin: 0, fontSize: '14px', lineHeight: 1.7, color: '#475569' },
   bottomGrid: { display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '20px', marginTop: '24px' },
+  singleColumnGrid: { gridTemplateColumns: '1fr' },
   largeCard: { backgroundColor: '#ffffff', borderRadius: '22px', padding: '24px', boxShadow: '0 10px 25px rgba(15,23,42,0.05)', border: '1px solid #e2e8f0', minWidth: 0 },
   sectionHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', gap: '12px', flexWrap: 'wrap' },
   sectionTitle: { margin: 0, fontSize: '22px', fontWeight: 800, color: '#0f172a' },

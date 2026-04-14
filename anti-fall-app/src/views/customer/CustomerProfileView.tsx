@@ -13,8 +13,10 @@ import {
 import { useAuth } from '../../hooks/useAuth';
 import { getUserById, saveUserProfile } from '../../services/userService';
 import { showErrorAlert, showSuccessAlert } from '../../lib/alerts';
+import { useIsMobile } from '../../hooks/useIsMobile';
 
 export default function CustomerProfileView() {
+  const isMobile = useIsMobile();
   const { user, loading: authLoading } = useAuth();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -95,7 +97,7 @@ export default function CustomerProfileView() {
           </div>
         </div>
 
-        <div style={styles.grid}>
+        <div style={{ ...styles.grid, ...(isMobile ? styles.singleColumnGrid : {}) }}>
           <div style={styles.formCard}>
             <div style={styles.sectionHeader}>
               <h3 style={styles.sectionTitle}>Informasi Akun</h3>
@@ -303,6 +305,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     gap: '20px',
     marginTop: '24px',
   },
+  singleColumnGrid: { gridTemplateColumns: '1fr' },
   formCard: {
     backgroundColor: '#ffffff',
     borderRadius: '22px',

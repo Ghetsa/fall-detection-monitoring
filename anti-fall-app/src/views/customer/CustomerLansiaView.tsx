@@ -1,4 +1,4 @@
-import { useState, useEffect, CSSProperties } from 'react';
+import { useState, useEffect, CSSProperties, useCallback } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import {
   Users, Plus, Edit2, Trash2, X, Save, User, Phone,
@@ -7,6 +7,7 @@ import {
 import { useAuth } from '../../hooks/useAuth';
 import { getLansiaByCustomer, addLansia, updateLansia, deleteLansia } from '../../services/lansiaService';
 import { Lansia, LansiaFormData } from '../../types/lansia';
+import { useIsMobile } from '../../hooks/useIsMobile';
 
 const emptyForm: LansiaFormData = {
   customerId: '',
@@ -25,6 +26,7 @@ const emptyForm: LansiaFormData = {
 };
 
 export default function CustomerLansiaView() {
+  const isMobile = useIsMobile();
   const { user } = useAuth();
   const [lansiaList, setLansiaList] = useState<Lansia[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,7 +39,7 @@ export default function CustomerLansiaView() {
   const [form, setForm] = useState<LansiaFormData>(emptyForm);
   const [detailTarget, setDetailTarget] = useState<Lansia | null>(null);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     try {
@@ -46,9 +48,9 @@ export default function CustomerLansiaView() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
-  useEffect(() => { loadData(); }, [user]);
+  useEffect(() => { loadData(); }, [loadData]);
 
   const filtered = lansiaList.filter((l) => {
     const q = searchQuery.toLowerCase();
@@ -66,8 +68,21 @@ export default function CustomerLansiaView() {
 
   const openEdit = (lansia: Lansia) => {
     setEditTarget(lansia);
-    const { id, ...rest } = lansia;
-    setForm(rest);
+    setForm({
+      customerId: lansia.customerId,
+      nama: lansia.nama,
+      usia: lansia.usia,
+      jenisKelamin: lansia.jenisKelamin,
+      alamat: lansia.alamat,
+      noHp: lansia.noHp,
+      kontakDarurat: lansia.kontakDarurat,
+      namaKontakDarurat: lansia.namaKontakDarurat,
+      kondisiKesehatan: lansia.kondisiKesehatan,
+      deviceSerial: lansia.deviceSerial,
+      deviceId: lansia.deviceId,
+      status: lansia.status,
+      catatan: lansia.catatan,
+    });
     setModalOpen(true);
   };
 
@@ -120,7 +135,7 @@ export default function CustomerLansiaView() {
         </div>
 
         {/* Stats */}
-        <div style={styles.statsRow}>
+        <div style={{ ...styles.statsRow, ...(isMobile ? styles.singleColumnGrid : {}) }}>
           {[
             { label: 'Total Lansia', value: lansiaList.length, bg: '#eff6ff', icon: <Users size={20} color="#2563eb" /> },
             { label: 'Aktif Dipantau', value: totalAktif, bg: '#dcfce7', icon: <Activity size={20} color="#16a34a" /> },
@@ -224,7 +239,7 @@ export default function CustomerLansiaView() {
               <button style={styles.closeBtn} onClick={() => setModalOpen(false)}><X size={18} /></button>
             </div>
             <div style={styles.modalBody}>
-              <div style={styles.formGrid}>
+              <div style={{ ...styles.formGrid, ...(isMobile ? styles.singleColumnGrid : {}) }}>
                 {([
                   { label: 'Nama Lengkap *', key: 'nama', icon: <User size={15} />, type: 'text', placeholder: 'Nama lengkap lansia' },
                   { label: 'Usia', key: 'usia', icon: <Calendar size={15} />, type: 'number', placeholder: '60' },
@@ -376,6 +391,7 @@ const styles: Record<string, CSSProperties> = {
   heroText: { margin: 0, fontSize: '15px', lineHeight: 1.7, color: 'rgba(255,255,255,0.92)', maxWidth: '700px' },
   heroBadge: { backgroundColor: '#ffffff', color: '#1d4ed8', padding: '12px 18px', borderRadius: '999px', fontWeight: 800, fontSize: '15px', display: 'inline-flex', alignItems: 'center', gap: '10px' },
   statsRow: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginTop: '20px' },
+  singleColumnGrid: { gridTemplateColumns: '1fr' },
   statCard: { backgroundColor: '#ffffff', borderRadius: '18px', padding: '18px 20px', boxShadow: '0 4px 16px rgba(15,23,42,0.06)', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '14px' },
   statIcon: { width: '44px', height: '44px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   statLabel: { margin: 0, fontSize: '13px', color: '#64748b', fontWeight: 600 },

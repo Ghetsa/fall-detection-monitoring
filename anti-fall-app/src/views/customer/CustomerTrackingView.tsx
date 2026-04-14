@@ -7,10 +7,15 @@ import { getLansiaByCustomer } from '../../services/lansiaService';
 import { getDeviceByLansiaId } from '../../services/deviceService';
 import { Lansia } from '../../types/lansia';
 import { Device } from '../../types/device';
+import { useIsMobile } from '../../hooks/useIsMobile';
 
-function timeAgo(ts: any): string {
+function timeAgo(ts: unknown): string {
   if (!ts) return '-';
-  const date: Date = ts.toDate ? ts.toDate() : new Date(ts);
+  const value = ts as { toDate?: () => Date } | string | number | Date;
+  const date: Date =
+    typeof value === 'object' && value !== null && 'toDate' in value && typeof value.toDate === 'function'
+      ? value.toDate()
+      : new Date(value as string | number | Date);
   const diff = Math.floor((Date.now() - date.getTime()) / 1000);
   if (diff < 60) return `${diff} detik yang lalu`;
   if (diff < 3600) return `${Math.floor(diff / 60)} menit yang lalu`;
@@ -19,6 +24,7 @@ function timeAgo(ts: any): string {
 }
 
 export default function CustomerTrackingView() {
+  const isMobile = useIsMobile();
   const { user } = useAuth();
   const [lansiaList, setLansiaList] = useState<Lansia[]>([]);
   const [selected, setSelected] = useState<Lansia | null>(null);
@@ -103,7 +109,7 @@ export default function CustomerTrackingView() {
           </div>
         )}
 
-        <div style={styles.grid}>
+        <div style={{ ...styles.grid, ...(isMobile ? styles.singleColumnGrid : {}) }}>
           <div style={styles.mapCard}>
             {deviceLoading ? (
               <div style={styles.mapPlaceholder}>
@@ -248,6 +254,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     cursor: 'pointer',
   },
   grid: { display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '20px', marginTop: '24px' },
+  singleColumnGrid: { gridTemplateColumns: '1fr' },
   mapCard: {
     backgroundColor: '#ffffff',
     borderRadius: '22px',

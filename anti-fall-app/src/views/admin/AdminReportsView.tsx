@@ -12,8 +12,10 @@ import {
   triggerDownload,
   openPdfTemplate,
 } from '../../lib/reportExports';
+import { useIsMobile } from '../../hooks/useIsMobile';
 
 export default function AdminReportsView() {
+  const isMobile = useIsMobile();
   const [reports, setReports] = useState<Report[]>([]);
   const [summary, setSummary] = useState<ReportSummaryData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -179,7 +181,7 @@ export default function AdminReportsView() {
           </div>
         </div>
 
-        <div style={styles.cardGrid}>
+        <div style={{ ...styles.cardGrid, ...(isMobile ? styles.singleColumnGrid : {}) }}>
           <ReportSummaryCard
             title="Total Users"
             value={loading ? '-' : summary?.totalUsers ?? 0}
@@ -413,6 +415,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     gap: '20px',
     marginTop: '24px',
   },
+  singleColumnGrid: { gridTemplateColumns: '1fr' },
   tableSection: { marginTop: '24px' },
   tableCard: {
     backgroundColor: '#ffffff',
