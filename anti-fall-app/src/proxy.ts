@@ -4,7 +4,7 @@ function getDashboardByRole(role: string | undefined) {
   return role === 'admin' ? '/admin/dashboard' : '/customer/dashboard';
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const session = request.cookies.get('anti_fall_session')?.value;
   const role = request.cookies.get('anti_fall_role')?.value;
