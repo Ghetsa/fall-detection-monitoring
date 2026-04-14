@@ -8,5 +8,7 @@ export interface AppUser {
   department?: string;
   relationship?: string;
   photoURL?: string;
-  createdAt?: any;
+  createdAt?: unknown;
 }
+
+export type AppUserFormData = Omit<AppUser, 'createdAt'>;
