@@ -33,6 +33,7 @@ function GoogleIcon() {
 export default function LoginView() {
   const router = useRouter();
   const { data: session, status } = useSession();
+  const [isMobile, setIsMobile] = useState(false);
 
   const [form, setForm] = useState({
     email: '',
@@ -80,6 +81,17 @@ export default function LoginView() {
       setError('Login dengan Google gagal. Silakan coba lagi.');
     }
   }, [router.query.error]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -131,9 +143,19 @@ export default function LoginView() {
         <title>Login | Anti Fall App</title>
       </Head>
 
-      <main style={styles.page}>
-        <div style={styles.card}>
-          <div style={styles.leftSide}>
+      <main
+        style={{
+          ...styles.page,
+          ...(isMobile ? styles.pageMobile : {}),
+        }}
+      >
+        <div
+          style={{
+            ...styles.card,
+            ...(isMobile ? styles.cardMobile : {}),
+          }}
+        >
+          {!isMobile && <div style={styles.leftSide}>
             <p style={styles.badge}>Welcome Back</p>
             <h1 style={styles.title}>Login ke Anti Fall App</h1>
             <p style={styles.description}>
@@ -150,15 +172,33 @@ export default function LoginView() {
                 <li>Notifikasi dan kontak darurat</li>
               </ul>
             </div>
-          </div>
+          </div>}
 
-          <div style={styles.rightSide}>
-            <h2 style={styles.formTitle}>Login</h2>
-            <p style={styles.formSubtitle}>
+          <div
+            style={{
+              ...styles.rightSide,
+              ...(isMobile ? styles.rightSideMobile : {}),
+            }}
+          >
+            <h2
+              style={{
+                ...styles.formTitle,
+                ...(isMobile ? styles.formTitleMobile : {}),
+              }}
+            >
+              Login
+            </h2>
+            {!isMobile && <p style={styles.formSubtitle}>
               Silakan masukkan email dan password kamu.
-            </p>
+            </p>}
 
-            <form onSubmit={handleSubmit} style={styles.form}>
+            <form
+              onSubmit={handleSubmit}
+              style={{
+                ...styles.form,
+                ...(isMobile ? styles.formMobile : {}),
+              }}
+            >
               <div style={styles.field}>
                 <label style={styles.label}>Email</label>
                 <input
@@ -168,7 +208,10 @@ export default function LoginView() {
                   onChange={(e) =>
                     setForm({ ...form, email: e.target.value })
                   }
-                  style={styles.input}
+                  style={{
+                    ...styles.input,
+                    ...(isMobile ? styles.inputMobile : {}),
+                  }}
                   required
                 />
               </div>
@@ -182,7 +225,10 @@ export default function LoginView() {
                   onChange={(e) =>
                     setForm({ ...form, password: e.target.value })
                   }
-                  style={styles.input}
+                  style={{
+                    ...styles.input,
+                    ...(isMobile ? styles.inputMobile : {}),
+                  }}
                   required
                 />
               </div>
@@ -191,7 +237,10 @@ export default function LoginView() {
 
               <button
                 type="submit"
-                style={styles.primaryButton}
+                style={{
+                  ...styles.primaryButton,
+                  ...(isMobile ? styles.primaryButtonMobile : {}),
+                }}
                 disabled={loading}
               >
                 {loading ? 'Loading...' : 'Login'}
@@ -206,7 +255,10 @@ export default function LoginView() {
 
             <button
               type="button"
-              style={styles.googleButton}
+              style={{
+                ...styles.googleButton,
+                ...(isMobile ? styles.googleButtonMobile : {}),
+              }}
               onClick={handleGoogleLogin}
               disabled={loading}
             >
@@ -223,11 +275,11 @@ export default function LoginView() {
               </Link>
             </p>
 
-            <p style={styles.backText}>
+            {!isMobile && <p style={styles.backText}>
               <Link href="/" style={styles.backLink}>
                 ← Kembali ke Landing Page
               </Link>
-            </p>
+            </p>}
           </div>
         </div>
       </main>
@@ -246,6 +298,10 @@ const styles: { [key: string]: React.CSSProperties } = {
     fontFamily:
       'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
   },
+  pageMobile: {
+    alignItems: 'flex-start',
+    padding: '16px',
+  },
   card: {
     width: '100%',
     maxWidth: '1100px',
@@ -255,6 +311,12 @@ const styles: { [key: string]: React.CSSProperties } = {
     overflow: 'hidden',
     display: 'grid',
     gridTemplateColumns: '1fr 1fr',
+  },
+  cardMobile: {
+    maxWidth: '100%',
+    gridTemplateColumns: '1fr',
+    borderRadius: '24px',
+    boxShadow: '0 16px 40px rgba(15, 23, 42, 0.1)',
   },
   leftSide: {
     background: 'linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%)',
@@ -266,6 +328,9 @@ const styles: { [key: string]: React.CSSProperties } = {
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'center',
+  },
+  rightSideMobile: {
+    padding: '24px 18px',
   },
   badge: {
     display: 'inline-block',
@@ -312,6 +377,10 @@ const styles: { [key: string]: React.CSSProperties } = {
     color: '#0f172a',
     marginBottom: '10px',
   },
+  formTitleMobile: {
+    fontSize: '28px',
+    marginBottom: '18px',
+  },
   formSubtitle: {
     color: '#64748b',
     marginBottom: '28px',
@@ -322,6 +391,9 @@ const styles: { [key: string]: React.CSSProperties } = {
     display: 'flex',
     flexDirection: 'column',
     gap: '18px',
+  },
+  formMobile: {
+    gap: '16px',
   },
   field: {
     display: 'flex',
@@ -341,6 +413,10 @@ const styles: { [key: string]: React.CSSProperties } = {
     outline: 'none',
     color: '#334155',
   },
+  inputMobile: {
+    padding: '15px 16px',
+    fontSize: '16px',
+  },
   primaryButton: {
     marginTop: '8px',
     backgroundColor: '#2563eb',
@@ -351,6 +427,10 @@ const styles: { [key: string]: React.CSSProperties } = {
     fontSize: '15px',
     fontWeight: 700,
     cursor: 'pointer',
+  },
+  primaryButtonMobile: {
+    width: '100%',
+    padding: '15px 18px',
   },
   errorText: {
     color: '#dc2626',
@@ -390,6 +470,10 @@ const styles: { [key: string]: React.CSSProperties } = {
     justifyContent: 'center',
     gap: '10px',
     boxShadow: '0 8px 20px rgba(15, 23, 42, 0.06)',
+  },
+  googleButtonMobile: {
+    width: '100%',
+    padding: '15px 16px',
   },
   googleIcon: {
     width: '24px',
