@@ -3,7 +3,7 @@ import Image from 'next/image';
 import { useEffect, useRef, useState, CSSProperties } from 'react';
 import { useRouter } from 'next/router';
 import { logoutUser } from '../../lib/auth';
-import { Menu, X, User as UserIcon, LogOut, ChevronDown } from 'lucide-react';
+import { User as UserIcon, LogOut, ChevronDown } from 'lucide-react';
 import { showErrorAlert, showSuccessAlert } from '../../lib/alerts';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -23,9 +23,7 @@ type NavbarProps = {
 };
 
 export default function Navbar({
-  collapsed = false,
   isMobile = false,
-  onToggleSidebar,
   title = 'Customer Dashboard',
   subtitle = 'Monitoring lansia secara real-time',
 }: NavbarProps) {
@@ -101,10 +99,6 @@ export default function Navbar({
             ...(isMobile ? styles.leftSectionMobile : {}),
           }}
         >
-          <button onClick={onToggleSidebar} style={styles.menuButton}>
-            {collapsed ? <Menu size={20} /> : <X size={20} />}
-          </button>
-
           <div style={styles.titleBox}>
             <h1
               style={{
@@ -114,14 +108,16 @@ export default function Navbar({
             >
               {title}
             </h1>
-            <p
-              style={{
-                ...styles.pageSubtitle,
-                ...(isMobile ? styles.pageSubtitleMobile : {}),
-              }}
-            >
-              {subtitle}
-            </p>
+            {!isMobile && (
+              <p
+                style={{
+                  ...styles.pageSubtitle,
+                  ...(isMobile ? styles.pageSubtitleMobile : {}),
+                }}
+              >
+                {subtitle}
+              </p>
+            )}
           </div>
         </div>
 
@@ -141,7 +137,10 @@ export default function Navbar({
             >
               <button
                 onClick={() => setMenuOpen((prev) => !prev)}
-                style={styles.profileButton}
+                style={{
+                  ...styles.profileButton,
+                  ...(isMobile ? styles.profileButtonMobile : {}),
+                }}
                 aria-label="Open profile menu"
               >
                 <span style={styles.profileImageWrap}>
@@ -163,9 +162,11 @@ export default function Navbar({
                   </span>
                 )}
 
-                <span style={styles.chevronWrap}>
-                  <ChevronDown size={16} />
-                </span>
+                {!isMobile && (
+                  <span style={styles.chevronWrap}>
+                    <ChevronDown size={16} />
+                  </span>
+                )}
               </button>
 
               {menuOpen && (
@@ -257,11 +258,10 @@ const styles: Record<string, CSSProperties> = {
     gap: '16px',
   },
   innerMobile: {
-    minHeight: 'unset',
-    padding: '12px 14px',
-    flexDirection: 'column',
-    alignItems: 'stretch',
-    justifyContent: 'flex-start',
+    minHeight: '64px',
+    padding: '10px 14px',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     gap: '12px',
   },
   leftSection: {
@@ -272,22 +272,7 @@ const styles: Record<string, CSSProperties> = {
     flex: 1,
   },
   leftSectionMobile: {
-    width: '100%',
-    alignItems: 'flex-start',
-  },
-  menuButton: {
-    width: '44px',
-    height: '44px',
-    borderRadius: '12px',
-    border: '1px solid #cbd5e1',
-    backgroundColor: '#f8fafc',
-    color: '#475569',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    transition: 'all 0.2s ease',
-    flexShrink: 0,
+    minWidth: 0,
   },
   titleBox: {
     minWidth: 0,
@@ -301,7 +286,10 @@ const styles: Record<string, CSSProperties> = {
     lineHeight: 1.2,
   },
   pageTitleMobile: {
-    fontSize: '18px',
+    fontSize: '17px',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
   },
   pageSubtitle: {
     margin: '4px 0 0',
@@ -322,17 +310,17 @@ const styles: Record<string, CSSProperties> = {
     position: 'relative',
   },
   rightSectionMobile: {
-    width: '100%',
-    justifyContent: 'flex-start',
-    alignItems: 'stretch',
-    flexDirection: 'column',
-    gap: '10px',
+    width: 'auto',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: '8px',
   },
   profileMenuWrapper: {
     position: 'relative',
   },
   profileMenuWrapperMobile: {
-    width: '100%',
+    width: 'auto',
   },
   profileButton: {
     border: '1px solid #e2e8f0',
@@ -344,6 +332,14 @@ const styles: Record<string, CSSProperties> = {
     gap: '10px',
     cursor: 'pointer',
     minHeight: '52px',
+  },
+  profileButtonMobile: {
+    minHeight: '44px',
+    minWidth: '44px',
+    width: '44px',
+    padding: '2px',
+    borderRadius: '999px',
+    justifyContent: 'center',
   },
   profileImageWrap: {
     width: '40px',
@@ -406,9 +402,11 @@ const styles: Record<string, CSSProperties> = {
     zIndex: 120,
   },
   dropdownMobile: {
-    position: 'static',
-    width: '100%',
-    marginTop: '10px',
+    position: 'absolute',
+    top: 'calc(100% + 10px)',
+    right: 0,
+    width: '240px',
+    maxWidth: 'calc(100vw - 28px)',
   },
   dropdownHeader: {
     display: 'flex',

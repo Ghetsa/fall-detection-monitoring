@@ -58,6 +58,7 @@ export default function DashboardLayout({
   }, [authLoading, user, userRole, role, router]);
 
   const sidebarWidth = !isMobile && !collapsed ? 260 : 0;
+  const mobileBottomInset = isMobile ? 120 : 0;
 
   const pageTitle =
     title || (role === 'admin' ? 'Admin Dashboard' : 'Customer Dashboard');
@@ -113,7 +114,18 @@ export default function DashboardLayout({
           subtitle={pageSubtitle}
         />
 
-        <main style={styles.content}>{children}</main>
+        <main
+          style={{
+            ...styles.content,
+            ...(isMobile
+              ? {
+                  padding: `16px 14px ${mobileBottomInset}px`,
+                }
+              : {}),
+          }}
+        >
+          {children}
+        </main>
       </div>
     </div>
   );

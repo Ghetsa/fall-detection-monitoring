@@ -6,7 +6,6 @@ import {
   Users,
   TriangleAlert,
   Megaphone,
-  Settings,
   FileBarChart2,
 } from 'lucide-react';
 
@@ -28,9 +27,33 @@ type AdminSidebarProps = {
 export default function AdminSidebar({
   isMobile = false,
   collapsed = false,
-  onToggle,
 }: AdminSidebarProps) {
   const router = useRouter();
+
+  if (isMobile) {
+    return (
+      <nav style={styles.mobileNav}>
+        {menuItems.map((item) => {
+          const isActive = router.pathname === item.href;
+          const Icon = item.icon;
+
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              style={{
+                ...styles.mobileLink,
+                ...(isActive ? styles.mobileLinkActive : {}),
+              }}
+            >
+              <Icon size={18} strokeWidth={2} />
+              <span style={styles.mobileLabel}>{item.label}</span>
+            </Link>
+          );
+        })}
+      </nav>
+    );
+  }
 
   return (
     <aside
@@ -200,5 +223,43 @@ const styles: Record<string, CSSProperties> = {
     margin: 0,
     fontSize: '12px',
     color: 'rgba(255,255,255,0.82)',
+  },
+  mobileNav: {
+    position: 'fixed',
+    left: '12px',
+    right: '12px',
+    bottom: 'max(12px, env(safe-area-inset-bottom))',
+    zIndex: 110,
+    display: 'grid',
+    gridTemplateColumns: 'repeat(5, minmax(0, 1fr))',
+    gap: '8px',
+    padding: '10px 10px calc(10px + env(safe-area-inset-bottom))',
+    backgroundColor: 'rgba(255,255,255,0.96)',
+    border: '1px solid #e2e8f0',
+    borderRadius: '22px',
+    boxShadow: '0 16px 40px rgba(15, 23, 42, 0.16)',
+    backdropFilter: 'blur(14px)',
+  },
+  mobileLink: {
+    textDecoration: 'none',
+    color: '#64748b',
+    minHeight: '58px',
+    borderRadius: '16px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '6px',
+    fontSize: '10px',
+    fontWeight: 700,
+    textAlign: 'center',
+    padding: '6px 4px',
+  },
+  mobileLinkActive: {
+    backgroundColor: '#dbeafe',
+    color: '#1d4ed8',
+  },
+  mobileLabel: {
+    lineHeight: 1.1,
   },
 };
