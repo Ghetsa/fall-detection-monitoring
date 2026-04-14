@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { getLansiaByCustomer, addLansia, updateLansia, deleteLansia } from '../../services/lansiaService';
-import { getDevicesByCustomer } from '../../services/deviceService';
+import { getAllDevices, getDevicesByCustomer } from '../../services/deviceService';
 import { Device } from '../../types/device';
 import { Lansia, LansiaFormData } from '../../types/lansia';
 import { useIsMobile } from '../../hooks/useIsMobile';
@@ -46,10 +46,12 @@ export default function CustomerLansiaView() {
     if (!user) return;
     setLoading(true);
     try {
-      const [data, deviceData] = await Promise.all([
+      const [data, customerDevices] = await Promise.all([
         getLansiaByCustomer(user.uid),
         getDevicesByCustomer(user.uid),
       ]);
+      const deviceData =
+        customerDevices.length > 0 ? customerDevices : await getAllDevices();
       setLansiaList(data);
       setDevices(deviceData);
     } finally {
