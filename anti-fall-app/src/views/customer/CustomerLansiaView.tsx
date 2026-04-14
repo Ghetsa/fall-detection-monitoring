@@ -6,6 +6,8 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { getLansiaByCustomer, addLansia, updateLansia, deleteLansia } from '../../services/lansiaService';
+import { getDevicesByCustomer } from '../../services/deviceService';
+import { Device } from '../../types/device';
 import { Lansia, LansiaFormData } from '../../types/lansia';
 import { useIsMobile } from '../../hooks/useIsMobile';
 
@@ -33,6 +35,7 @@ export default function CustomerLansiaView() {
   const [saving, setSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<'Semua' | 'Aktif' | 'Nonaktif'>('Semua');
+  const [devices, setDevices] = useState<Device[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [editTarget, setEditTarget] = useState<Lansia | null>(null);
@@ -43,8 +46,12 @@ export default function CustomerLansiaView() {
     if (!user) return;
     setLoading(true);
     try {
-      const data = await getLansiaByCustomer(user.uid);
+      const [data, deviceData] = await Promise.all([
+        getLansiaByCustomer(user.uid),
+        getDevicesByCustomer(user.uid),
+      ]);
       setLansiaList(data);
+      setDevices(deviceData);
     } finally {
       setLoading(false);
     }
@@ -100,6 +107,18 @@ export default function CustomerLansiaView() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleDeviceChange = (selectedSerial: string) => {
+    const selectedDevice = devices.find(
+      (device) => device.serial === selectedSerial || device.id === selectedSerial
+    );
+
+    setForm((current) => ({
+      ...current,
+      deviceSerial: selectedDevice?.serial ?? '',
+      deviceId: selectedDevice?.id ?? '',
+    }));
   };
 
   const handleDelete = async (id: string) => {
@@ -262,7 +281,6 @@ export default function CustomerLansiaView() {
                   { label: 'Nama Lengkap *', key: 'nama', icon: <User size={15} />, type: 'text', placeholder: 'Nama lengkap lansia' },
                   { label: 'Usia', key: 'usia', icon: <Calendar size={15} />, type: 'number', placeholder: '60' },
                   { label: 'No. HP Lansia', key: 'noHp', icon: <Phone size={15} />, type: 'text', placeholder: '08xxxxxxxxxx' },
-                  { label: 'Serial Device', key: 'deviceSerial', icon: <Cpu size={15} />, type: 'text', placeholder: 'ESP32-XXX' },
                   { label: 'Nama Kontak Darurat', key: 'namaKontakDarurat', icon: <User size={15} />, type: 'text', placeholder: 'Nama keluarga' },
                   { label: 'No. Kontak Darurat', key: 'kontakDarurat', icon: <Phone size={15} />, type: 'text', placeholder: '08xxxxxxxxxx' },
                 ] as const).map(({ label, key, icon, type, placeholder }) => (
@@ -277,6 +295,26 @@ export default function CustomerLansiaView() {
                     </div>
                   </div>
                 ))}
+                <div style={styles.fieldGroup}>
+                  <label style={styles.label}>Serial Device</label>
+                  <div style={{ ...styles.inputWrap, position: 'relative' }}>
+                    <span style={styles.inputIcon}><Cpu size={15} /></span>
+                    <select
+                      style={{ ...styles.input, appearance: 'none' }}
+                      value={form.deviceSerial}
+                      onChange={(e) => handleDeviceChange(e.target.value)}
+                    >
+                      <option value="">
+                        {devices.length > 0 ? 'Pilih serial device' : 'Belum ada device tersedia'}
+                      </option>
+                      {devices.map((device) => (
+                        <option key={device.id} value={device.serial}>
+                          {device.serial}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
                 <div style={styles.fieldGroup}>
                   <label style={styles.label}>Jenis Kelamin</label>
                   <div style={{ ...styles.inputWrap, position: 'relative' }}>
