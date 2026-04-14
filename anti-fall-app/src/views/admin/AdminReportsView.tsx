@@ -165,7 +165,7 @@ export default function AdminReportsView() {
       subtitle="Ringkasan laporan sistem dan aktivitas pengguna"
     >
       <section style={styles.content}>
-        <div style={styles.heroCard}>
+        <div style={{ ...styles.heroCard, ...(isMobile ? styles.heroCardMobile : {}) }}>
           <div style={styles.heroContent}>
             <p style={styles.heroLabel}>Reports Center</p>
             <h2 style={styles.heroTitle}>Admin Reports</h2>
@@ -175,7 +175,7 @@ export default function AdminReportsView() {
             </p>
           </div>
 
-          <div style={styles.heroBadge}>
+          <div style={{ ...styles.heroBadge, ...(isMobile ? styles.heroBadgeMobile : {}) }}>
             <span style={styles.heroBadgeDot} />
             Reports Ready
           </div>
@@ -375,6 +375,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     gap: '16px',
     flexWrap: 'wrap',
   },
+  heroCardMobile: { flexDirection: 'column', alignItems: 'flex-start' },
   heroContent: { flex: 1, minWidth: 0 },
   heroLabel: {
     margin: 0,
@@ -403,6 +404,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     fontWeight: 800,
     fontSize: '15px',
   },
+  heroBadgeMobile: { alignSelf: 'flex-start', marginTop: '4px' },
   heroBadgeDot: {
     width: '10px',
     height: '10px',

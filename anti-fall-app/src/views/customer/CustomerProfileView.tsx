@@ -81,7 +81,7 @@ export default function CustomerProfileView() {
       subtitle="Informasi akun dan data pendamping lansia"
     >
       <section style={styles.content}>
-        <div style={styles.heroCard}>
+        <div style={{ ...styles.heroCard, ...(isMobile ? styles.heroCardMobile : {}) }}>
           <div style={styles.heroContent}>
             <p style={styles.heroLabel}>Customer Profile</p>
             <h2 style={styles.heroTitle}>Profil Pengguna</h2>
@@ -91,7 +91,7 @@ export default function CustomerProfileView() {
             </p>
           </div>
 
-          <div style={styles.heroBadge}>
+          <div style={{ ...styles.heroBadge, ...(isMobile ? styles.heroBadgeMobile : {}) }}>
             <ShieldCheck size={18} />
             <span>Customer Account</span>
           </div>
@@ -264,6 +264,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     gap: '16px',
     flexWrap: 'wrap',
   },
+  heroCardMobile: { flexDirection: 'column', alignItems: 'flex-start' },
   heroContent: {
     flex: 1,
     minWidth: 0,
@@ -299,6 +300,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     gap: '8px',
     alignItems: 'center',
   },
+  heroBadgeMobile: { alignSelf: 'flex-start', marginTop: '4px' },
   grid: {
     display: 'grid',
     gridTemplateColumns: '1.2fr 0.8fr',

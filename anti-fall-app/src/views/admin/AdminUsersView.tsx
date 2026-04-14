@@ -228,7 +228,7 @@ export default function AdminUsersView() {
       subtitle="Kelola data pengguna dan hak akses"
     >
       <section style={styles.content}>
-        <div style={styles.heroCard}>
+        <div style={{ ...styles.heroCard, ...(isMobile ? styles.heroCardMobile : {}) }}>
           <div>
             <p style={styles.heroLabel}>Users</p>
             <h2 style={styles.heroTitle}>Manajemen Pengguna</h2>
@@ -237,7 +237,7 @@ export default function AdminUsersView() {
             </p>
           </div>
 
-          <div style={styles.heroBadge}>
+          <div style={{ ...styles.heroBadge, ...(isMobile ? styles.heroBadgeMobile : {}) }}>
             <Users size={18} />
             <span>{loading ? '—' : `${totalUsers} Users`}</span>
           </div>
@@ -578,10 +578,12 @@ export default function AdminUsersView() {
 const styles: { [key: string]: React.CSSProperties } = {
   content: { padding: '5px', minWidth: 0 },
   heroCard: { background: 'linear-gradient(135deg, #0f172a 0%, #1d4ed8 100%)', color: '#fff', borderRadius: '24px', padding: '28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' },
+  heroCardMobile: { flexDirection: 'column', alignItems: 'flex-start' },
   heroLabel: { margin: 0, fontSize: '13px', fontWeight: 700, textTransform: 'uppercase', color: 'rgba(255,255,255,0.8)', letterSpacing: '0.08em' },
   heroTitle: { margin: '8px 0 10px', fontSize: '32px', fontWeight: 800 },
   heroText: { margin: 0, fontSize: '15px', lineHeight: 1.7, color: 'rgba(255,255,255,0.92)' },
   heroBadge: { backgroundColor: '#ffffff', color: '#1d4ed8', padding: '12px 18px', borderRadius: '999px', fontWeight: 800, display: 'inline-flex', gap: '8px', alignItems: 'center' },
+  heroBadgeMobile: { alignSelf: 'flex-start', marginTop: '4px' },
   summaryGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginTop: '24px' },
   singleColumnGrid: { gridTemplateColumns: '1fr' },
   summaryCard: { backgroundColor: '#ffffff', borderRadius: '20px', padding: '22px', boxShadow: '0 10px 25px rgba(15,23,42,0.05)', border: '1px solid #e2e8f0', display: 'flex', gap: '14px', alignItems: 'center' },

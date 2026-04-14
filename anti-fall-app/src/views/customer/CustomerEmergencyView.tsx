@@ -97,7 +97,7 @@ export default function CustomerEmergencyView() {
       subtitle="Pengaturan kontak darurat"
     >
       <section style={styles.content}>
-        <div style={styles.heroCard}>
+        <div style={{ ...styles.heroCard, ...(isMobile ? styles.heroCardMobile : {}) }}>
           <div style={styles.heroContent}>
             <p style={styles.heroLabel}>Emergency Contact</p>
             <h2 style={styles.heroTitle}>Kontak Darurat Keluarga</h2>
@@ -107,7 +107,7 @@ export default function CustomerEmergencyView() {
             </p>
           </div>
 
-          <div style={styles.heroBadge}>
+          <div style={{ ...styles.heroBadge, ...(isMobile ? styles.heroBadgeMobile : {}) }}>
             <span style={styles.heroBadgeDot} />
             {currentEmergency ? 'Tersimpan' : 'Belum diisi'}
           </div>
@@ -243,11 +243,13 @@ export default function CustomerEmergencyView() {
 const styles: { [key: string]: React.CSSProperties } = {
   content: { padding: '5px', minWidth: 0 },
   heroCard: { background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)', color: '#ffffff', borderRadius: '24px', padding: '28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' },
+  heroCardMobile: { flexDirection: 'column', alignItems: 'flex-start' },
   heroContent: { flex: 1, minWidth: 0 },
   heroLabel: { margin: 0, fontSize: '13px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.8)' },
   heroTitle: { margin: '8px 0 10px', fontSize: '32px', fontWeight: 800, lineHeight: 1.2 },
   heroText: { margin: 0, fontSize: '15px', lineHeight: 1.7, color: 'rgba(255,255,255,0.92)', maxWidth: '760px' },
   heroBadge: { display: 'inline-flex', alignItems: 'center', gap: '10px', backgroundColor: '#ffffff', color: '#166534', padding: '12px 18px', borderRadius: '999px', fontWeight: 800, fontSize: '15px' },
+  heroBadgeMobile: { alignSelf: 'flex-start', marginTop: '4px' },
   heroBadgeDot: { width: '10px', height: '10px', borderRadius: '999px', backgroundColor: '#22c55e' },
   selectorRow: { display: 'flex', gap: '10px', marginTop: '16px', flexWrap: 'wrap' },
   selectorBtn: { borderRadius: '10px', padding: '8px 16px', fontSize: '14px', fontWeight: 700, cursor: 'pointer' },

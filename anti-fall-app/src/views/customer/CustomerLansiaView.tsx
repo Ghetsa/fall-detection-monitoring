@@ -120,7 +120,7 @@ export default function CustomerLansiaView() {
     <DashboardLayout role="customer" title="Kelola Lansia" subtitle="Manajemen data lansia yang dipantau">
       <section style={styles.content}>
         {/* Hero */}
-        <div style={styles.heroCard}>
+        <div style={{ ...styles.heroCard, ...(isMobile ? styles.heroCardMobile : {}) }}>
           <div style={styles.heroContent}>
             <p style={styles.heroLabel}>Manajemen Lansia</p>
             <h2 style={styles.heroTitle}>Kelola Data Lansia</h2>
@@ -128,7 +128,7 @@ export default function CustomerLansiaView() {
               Tambah, ubah, dan pantau data lansia yang terdaftar dalam sistem monitoring anti-jatuh.
             </p>
           </div>
-          <div style={styles.heroBadge}>
+          <div style={{ ...styles.heroBadge, ...(isMobile ? styles.heroBadgeMobile : {}) }}>
             <Users size={18} />
             <span>{lansiaList.length} Lansia Terdaftar</span>
           </div>
@@ -385,11 +385,13 @@ export default function CustomerLansiaView() {
 const styles: Record<string, CSSProperties> = {
   content: { padding: '5px', minWidth: 0 },
   heroCard: { background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)', color: '#ffffff', borderRadius: '24px', padding: '28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' },
+  heroCardMobile: { flexDirection: 'column', alignItems: 'flex-start' },
   heroContent: { flex: 1, minWidth: 0 },
   heroLabel: { margin: 0, fontSize: '13px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.8)' },
   heroTitle: { margin: '8px 0 10px', fontSize: '32px', fontWeight: 800, lineHeight: 1.2 },
   heroText: { margin: 0, fontSize: '15px', lineHeight: 1.7, color: 'rgba(255,255,255,0.92)', maxWidth: '700px' },
   heroBadge: { backgroundColor: '#ffffff', color: '#1d4ed8', padding: '12px 18px', borderRadius: '999px', fontWeight: 800, fontSize: '15px', display: 'inline-flex', alignItems: 'center', gap: '10px' },
+  heroBadgeMobile: { alignSelf: 'flex-start', marginTop: '4px' },
   statsRow: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginTop: '20px' },
   singleColumnGrid: { gridTemplateColumns: '1fr' },
   statCard: { backgroundColor: '#ffffff', borderRadius: '18px', padding: '18px 20px', boxShadow: '0 4px 16px rgba(15,23,42,0.06)', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '14px' },

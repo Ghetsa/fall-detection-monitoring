@@ -30,7 +30,7 @@ export default function AdminSettingsView() {
       subtitle="Pengaturan sistem dan notifikasi admin"
     >
       <section style={styles.content}>
-        <div style={styles.heroCard}>
+        <div style={{ ...styles.heroCard, ...(isMobile ? styles.heroCardMobile : {}) }}>
           <div style={styles.heroContent}>
             <p style={styles.heroLabel}>System Settings</p>
             <h2 style={styles.heroTitle}>Pengaturan Admin</h2>
@@ -40,7 +40,7 @@ export default function AdminSettingsView() {
             </p>
           </div>
 
-          <div style={styles.heroBadge}>
+          <div style={{ ...styles.heroBadge, ...(isMobile ? styles.heroBadgeMobile : {}) }}>
             <Settings size={18} />
             <span>Config Ready</span>
           </div>
@@ -286,6 +286,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     gap: '16px',
     flexWrap: 'wrap',
   },
+  heroCardMobile: { flexDirection: 'column', alignItems: 'flex-start' },
   heroContent: {
     flex: 1,
     minWidth: 0,
@@ -321,6 +322,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     gap: '8px',
     alignItems: 'center',
   },
+  heroBadgeMobile: { alignSelf: 'flex-start', marginTop: '4px' },
   grid: {
     display: 'grid',
     gridTemplateColumns: '1.2fr 0.8fr',

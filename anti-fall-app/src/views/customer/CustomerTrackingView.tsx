@@ -63,7 +63,7 @@ export default function CustomerTrackingView() {
       subtitle="Memantau lokasi lansia secara real-time"
     >
       <section style={styles.content}>
-        <div style={styles.heroCard}>
+        <div style={{ ...styles.heroCard, ...(isMobile ? styles.heroCardMobile : {}) }}>
           <div>
             <p style={styles.heroLabel}>Tracking</p>
             <h2 style={styles.heroTitle}>Lokasi Lansia</h2>
@@ -76,6 +76,7 @@ export default function CustomerTrackingView() {
           <div
             style={{
               ...styles.statusPill,
+              ...(isMobile ? styles.statusPillMobile : {}),
               color: loading ? '#334155' : device?.isOnline ? '#166534' : '#b91c1c',
             }}
           >
@@ -217,6 +218,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     gap: '16px',
     flexWrap: 'wrap',
   },
+  heroCardMobile: { flexDirection: 'column', alignItems: 'flex-start' },
   heroLabel: {
     margin: 0,
     fontSize: '13px',
@@ -244,6 +246,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     fontWeight: 800,
     fontSize: '15px',
   },
+  statusPillMobile: { alignSelf: 'flex-start', marginTop: '4px' },
   statusDot: { width: '10px', height: '10px', borderRadius: '999px' },
   selectorRow: { display: 'flex', gap: '10px', marginTop: '16px', flexWrap: 'wrap' },
   selectorBtn: {

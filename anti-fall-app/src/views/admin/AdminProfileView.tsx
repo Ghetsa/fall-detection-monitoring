@@ -81,7 +81,7 @@ export default function AdminProfileView() {
       subtitle="Informasi akun dan identitas admin"
     >
       <section style={styles.content}>
-        <div style={styles.heroCard}>
+        <div style={{ ...styles.heroCard, ...(isMobile ? styles.heroCardMobile : {}) }}>
           <div style={styles.heroContent}>
             <p style={styles.heroLabel}>Admin Profile</p>
             <h2 style={styles.heroTitle}>Profil Administrator</h2>
@@ -91,7 +91,7 @@ export default function AdminProfileView() {
             </p>
           </div>
 
-          <div style={styles.heroBadge}>
+          <div style={{ ...styles.heroBadge, ...(isMobile ? styles.heroBadgeMobile : {}) }}>
             <BadgeCheck size={18} />
             <span>Verified Admin</span>
           </div>
@@ -265,6 +265,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     gap: '16px',
     flexWrap: 'wrap',
   },
+  heroCardMobile: { flexDirection: 'column', alignItems: 'flex-start' },
   heroContent: {
     flex: 1,
     minWidth: 0,
@@ -300,6 +301,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     gap: '8px',
     alignItems: 'center',
   },
+  heroBadgeMobile: { alignSelf: 'flex-start', marginTop: '4px' },
   grid: {
     display: 'grid',
     gridTemplateColumns: '1.2fr 0.8fr',
