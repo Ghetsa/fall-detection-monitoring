@@ -4,10 +4,15 @@ import { Loader } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { getIncidentsByCustomer } from '../../services/incidentService';
 import { Incident } from '../../types/incident';
+import { useIsMobile } from '../../hooks/useIsMobile';
 
-function formatTimestamp(ts: any): string {
+function formatTimestamp(ts: unknown): string {
   if (!ts) return '—';
-  const date: Date = ts.toDate ? ts.toDate() : new Date(ts);
+  const value = ts as { toDate?: () => Date } | string | number | Date;
+  const date: Date =
+    typeof value === 'object' && value !== null && 'toDate' in value && typeof value.toDate === 'function'
+      ? value.toDate()
+      : new Date(value as string | number | Date);
   return date.toLocaleString('id-ID', {
     day: 'numeric', month: 'long', year: 'numeric',
     hour: '2-digit', minute: '2-digit',
@@ -29,6 +34,7 @@ const statusLabel = (sev: string) => {
 };
 
 export default function CustomerLogsView() {
+  const isMobile = useIsMobile();
   const { user } = useAuth();
   const [logs, setLogs] = useState<Incident[]>([]);
   const [loading, setLoading] = useState(true);
@@ -53,7 +59,7 @@ export default function CustomerLogsView() {
       subtitle="Riwayat kejadian yang tercatat oleh device"
     >
       <section style={styles.content}>
-        <div style={styles.heroCard}>
+        <div style={{ ...styles.heroCard, ...(isMobile ? styles.heroCardMobile : {}) }}>
           <div>
             <p style={styles.heroLabel}>Logs</p>
             <h2 style={styles.heroTitle}>Riwayat Aktivitas</h2>
@@ -62,7 +68,7 @@ export default function CustomerLogsView() {
             </p>
           </div>
 
-          <div style={styles.countBadge}>
+          <div style={{ ...styles.countBadge, ...(isMobile ? styles.countBadgeMobile : {}) }}>
             {loading ? '—' : `${logs.length} Recent Logs`}
           </div>
         </div>
@@ -134,10 +140,12 @@ export default function CustomerLogsView() {
 const styles: { [key: string]: React.CSSProperties } = {
   content: { padding: '5px', minWidth: 0 },
   heroCard: { background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)', color: '#ffffff', borderRadius: '24px', padding: '28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' },
+  heroCardMobile: { flexDirection: 'column', alignItems: 'flex-start' },
   heroLabel: { margin: 0, fontSize: '13px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.8)' },
   heroTitle: { margin: '8px 0 10px', fontSize: '32px', fontWeight: 800 },
   heroText: { margin: 0, fontSize: '15px', lineHeight: 1.7, color: 'rgba(255,255,255,0.92)' },
   countBadge: { backgroundColor: '#ffffff', color: '#1d4ed8', padding: '10px 16px', borderRadius: '999px', fontWeight: 700, fontSize: '14px' },
+  countBadgeMobile: { alignSelf: 'flex-start', marginTop: '4px' },
   tableCard: { marginTop: '24px', backgroundColor: '#ffffff', borderRadius: '22px', padding: '20px', border: '1px solid #e2e8f0', boxShadow: '0 10px 25px rgba(15,23,42,0.05)' },
   tableHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' },
   sectionTitle: { margin: 0, fontSize: '20px', fontWeight: 800, color: '#0f172a' },

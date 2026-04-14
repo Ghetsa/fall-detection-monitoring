@@ -1,13 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import { Bell, AlertTriangle, ShieldCheck, BatteryWarning, Loader, CheckCheck } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { getNotificationsByCustomer, markAllNotificationsRead } from '../../services/notificationService';
 import { Notification } from '../../types/notification';
+import { useIsMobile } from '../../hooks/useIsMobile';
 
-function formatTimestamp(ts: any): string {
+function formatTimestamp(ts: unknown): string {
   if (!ts) return '—';
-  const date: Date = ts.toDate ? ts.toDate() : new Date(ts);
+  const value = ts as { toDate?: () => Date } | string | number | Date;
+  const date: Date =
+    typeof value === 'object' && value !== null && 'toDate' in value && typeof value.toDate === 'function'
+      ? value.toDate()
+      : new Date(value as string | number | Date);
   return date.toLocaleString('id-ID', {
     day: 'numeric', month: 'long', year: 'numeric',
     hour: '2-digit', minute: '2-digit',
@@ -15,12 +20,13 @@ function formatTimestamp(ts: any): string {
 }
 
 export default function CustomerNotificationsView() {
+  const isMobile = useIsMobile();
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [marking, setMarking] = useState(false);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     try {
@@ -29,9 +35,9 @@ export default function CustomerNotificationsView() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
-  useEffect(() => { loadData(); }, [user]);
+  useEffect(() => { loadData(); }, [loadData]);
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
@@ -59,7 +65,7 @@ export default function CustomerNotificationsView() {
       subtitle="Pemberitahuan dari sistem monitoring"
     >
       <section style={styles.content}>
-        <div style={styles.heroCard}>
+        <div style={{ ...styles.heroCard, ...(isMobile ? styles.heroCardMobile : {}) }}>
           <div>
             <p style={styles.heroLabel}>Notifications</p>
             <h2 style={styles.heroTitle}>Notifikasi Sistem</h2>
@@ -68,7 +74,7 @@ export default function CustomerNotificationsView() {
             </p>
           </div>
 
-          <div style={styles.countBadge}>
+          <div style={{ ...styles.countBadge, ...(isMobile ? styles.countBadgeMobile : {}) }}>
             <Bell size={18} />
             <span>{loading ? '—' : `${notifications.length} Notifikasi`}</span>
           </div>
@@ -147,10 +153,12 @@ export default function CustomerNotificationsView() {
 const styles: { [key: string]: React.CSSProperties } = {
   content: { padding: '5px' },
   heroCard: { background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)', color: '#fff', borderRadius: '24px', padding: '28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' },
+  heroCardMobile: { flexDirection: 'column', alignItems: 'flex-start' },
   heroLabel: { fontSize: '13px', fontWeight: 700, textTransform: 'uppercase', color: 'rgba(255,255,255,0.8)', margin: 0 },
   heroTitle: { fontSize: '30px', fontWeight: 800, margin: '8px 0' },
   heroText: { fontSize: '15px', color: 'rgba(255,255,255,0.9)', margin: 0, lineHeight: 1.7 },
   countBadge: { background: '#fff', color: '#1d4ed8', padding: '10px 16px', borderRadius: '999px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '8px' },
+  countBadgeMobile: { alignSelf: 'flex-start', marginTop: '4px' },
   unreadBar: { marginTop: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px', backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '12px', padding: '12px 16px' },
   unreadText: { fontSize: '14px', fontWeight: 700, color: '#1d4ed8' },
   markAllBtn: { display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: '#1d4ed8', color: '#fff', border: 'none', borderRadius: '8px', padding: '8px 14px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' },
