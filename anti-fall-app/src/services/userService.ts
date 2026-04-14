@@ -34,3 +34,17 @@ export async function saveUserProfile(
     { merge: true }
   );
 }
+
+export async function updateUserRole(
+  uid: string,
+  role: AppUser['role']
+): Promise<void> {
+  await setDoc(
+    doc(db, COL, uid),
+    {
+      uid,
+      role,
+    },
+    { merge: true }
+  );
+}

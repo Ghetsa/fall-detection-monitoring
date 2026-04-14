@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import { Users, Shield, UserCheck, Search, Loader } from 'lucide-react';
-import { getAllUsers } from '../../services/userService';
+import { showErrorAlert, showSuccessAlert } from '../../lib/alerts';
+import { getAllUsers, updateUserRole } from '../../services/userService';
 import { AppUser } from '../../types/user';
 
 export default function AdminUsersView() {
   const [users, setUsers] = useState<AppUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [savingUserId, setSavingUserId] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -33,6 +35,43 @@ export default function AdminUsersView() {
   const totalUsers = users.length;
   const activeUsers = users.length; // all Firestore users are considered active
   const adminCount = users.filter((u) => u.role === 'admin').length;
+
+  const handleRoleChange = async (
+    uid: string,
+    nextRole: AppUser['role']
+  ) => {
+    const targetUser = users.find((user) => user.uid === uid);
+
+    if (!targetUser || targetUser.role === nextRole) {
+      return;
+    }
+
+    const previousUsers = users;
+
+    setSavingUserId(uid);
+    setUsers((currentUsers) =>
+      currentUsers.map((user) =>
+        user.uid === uid ? { ...user, role: nextRole } : user
+      )
+    );
+
+    try {
+      await updateUserRole(uid, nextRole);
+      await showSuccessAlert(
+        'Role berhasil diperbarui',
+        `${targetUser.fullName} sekarang memiliki role ${nextRole}.`
+      );
+    } catch (error) {
+      console.error('Gagal memperbarui role user:', error);
+      setUsers(previousUsers);
+      await showErrorAlert(
+        'Update role gagal',
+        'Role user tidak berhasil diperbarui.'
+      );
+    } finally {
+      setSavingUserId(null);
+    }
+  };
 
   return (
     <DashboardLayout
@@ -131,9 +170,30 @@ export default function AdminUsersView() {
                       </td>
                       <td style={styles.td}>{user.email}</td>
                       <td style={styles.td}>
-                        <span style={user.role === 'admin' ? styles.roleBadgeAdmin : styles.roleBadgeCustomer}>
-                          {user.role}
-                        </span>
+                        <div style={styles.roleEditor}>
+                          <select
+                            value={user.role}
+                            onChange={(e) =>
+                              void handleRoleChange(
+                                user.uid,
+                                e.target.value as AppUser['role']
+                              )
+                            }
+                            disabled={savingUserId === user.uid}
+                            style={{
+                              ...styles.roleSelect,
+                              ...(user.role === 'admin'
+                                ? styles.roleSelectAdmin
+                                : styles.roleSelectCustomer),
+                            }}
+                          >
+                            <option value="customer">customer</option>
+                            <option value="admin">admin</option>
+                          </select>
+                          {savingUserId === user.uid ? (
+                            <span style={styles.savingText}>Saving...</span>
+                          ) : null}
+                        </div>
                       </td>
                       <td style={styles.td}>{user.phone ?? '—'}</td>
                       <td style={styles.td}>
@@ -181,7 +241,10 @@ const styles: { [key: string]: React.CSSProperties } = {
   emptyText: { margin: 0, color: '#94a3b8', fontSize: '15px' },
   nameCell: { display: 'flex', alignItems: 'center', gap: '10px' },
   avatar: { width: '34px', height: '34px', borderRadius: '10px', backgroundColor: '#dbeafe', color: '#1d4ed8', fontSize: '14px', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
-  roleBadgeAdmin: { backgroundColor: '#dbeafe', color: '#1d4ed8', padding: '6px 10px', borderRadius: '999px', fontSize: '12px', fontWeight: 700 },
-  roleBadgeCustomer: { backgroundColor: '#f1f5f9', color: '#334155', padding: '6px 10px', borderRadius: '999px', fontSize: '12px', fontWeight: 700 },
+  roleEditor: { display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' },
+  roleSelect: { borderRadius: '10px', border: '1px solid #cbd5e1', padding: '8px 12px', fontSize: '13px', fontWeight: 700, outline: 'none', backgroundColor: '#ffffff', textTransform: 'capitalize', cursor: 'pointer' },
+  roleSelectAdmin: { backgroundColor: '#dbeafe', color: '#1d4ed8', borderColor: '#93c5fd' },
+  roleSelectCustomer: { backgroundColor: '#f1f5f9', color: '#334155', borderColor: '#cbd5e1' },
+  savingText: { fontSize: '12px', fontWeight: 700, color: '#64748b' },
   statusBadgeActive: { backgroundColor: '#dcfce7', color: '#166534', padding: '6px 10px', borderRadius: '999px', fontSize: '12px', fontWeight: 700 },
 };
