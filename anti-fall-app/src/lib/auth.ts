@@ -1,17 +1,19 @@
 import {
   createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
   deleteUser,
-  updateProfile,
+  signInWithEmailAndPassword,
+  signInWithPopup,
   signOut,
+  updateProfile,
+  UserCredential,
 } from 'firebase/auth';
 import {
   doc,
+  getDoc,
   serverTimestamp,
   setDoc,
-  getDoc,
 } from 'firebase/firestore';
-import { auth, db } from './firebase';
+import { auth, db, googleProvider } from './firebase';
 
 type RegisterPayload = {
   fullName: string;
@@ -26,7 +28,7 @@ type LoginPayload = {
 };
 
 type LoginResult = {
-  userCredential: any;
+  userCredential: UserCredential;
   role: 'admin' | 'customer';
   redirectTo: string;
 };
@@ -44,6 +46,40 @@ function clearAuthCookies() {
 
   document.cookie = 'anti_fall_session=; Path=/; Max-Age=0; SameSite=Lax';
   document.cookie = 'anti_fall_role=; Path=/; Max-Age=0; SameSite=Lax';
+}
+
+async function getUserRoleAndEnsureProfile(
+  uid: string,
+  fallback: {
+    fullName?: string | null;
+    email?: string | null;
+    role?: 'admin' | 'customer';
+  } = {}
+) {
+  const userRef = doc(db, 'users', uid);
+  const userSnap = await getDoc(userRef);
+
+  if (userSnap.exists()) {
+    const userData = userSnap.data();
+
+    return userData.role === 'admin' ? 'admin' : 'customer';
+  }
+
+  const role = fallback.role === 'admin' ? 'admin' : 'customer';
+
+  await setDoc(
+    userRef,
+    {
+      uid,
+      fullName: fallback.fullName || 'User Google',
+      email: fallback.email || '',
+      role,
+      createdAt: serverTimestamp(),
+    },
+    { merge: true }
+  );
+
+  return role;
 }
 
 export async function registerWithEmail({
@@ -106,15 +142,33 @@ export async function loginWithEmail({
   );
 
   const user = userCredential.user;
-  const userRef = doc(db, 'users', user.uid);
-  const userSnap = await getDoc(userRef);
+  const role = await getUserRoleAndEnsureProfile(user.uid, {
+    fullName: user.displayName,
+    email: user.email,
+    role: 'customer',
+  });
 
-  let role: 'admin' | 'customer' = 'customer';
+  setAuthCookies(role);
 
-  if (userSnap.exists()) {
-    const userData = userSnap.data();
-    role = userData.role === 'admin' ? 'admin' : 'customer';
-  }
+  return {
+    userCredential,
+    role,
+    redirectTo: role === 'admin' ? '/admin/dashboard' : '/customer/dashboard',
+  };
+}
+
+export async function loginWithGoogle(): Promise<LoginResult> {
+  googleProvider.setCustomParameters({
+    prompt: 'select_account',
+  });
+
+  const userCredential = await signInWithPopup(auth, googleProvider);
+  const user = userCredential.user;
+  const role = await getUserRoleAndEnsureProfile(user.uid, {
+    fullName: user.displayName,
+    email: user.email,
+    role: 'customer',
+  });
 
   setAuthCookies(role);
 

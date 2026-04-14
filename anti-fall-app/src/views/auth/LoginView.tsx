@@ -1,8 +1,9 @@
 import Head from 'next/head';
+import { FirebaseError } from 'firebase/app';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { FormEvent, useState } from 'react';
-import { loginWithEmail } from '../../lib/auth';
+import { loginWithEmail, loginWithGoogle } from '../../lib/auth';
 import { showErrorAlert, showSuccessAlert } from '../../lib/alerts';
 
 export default function LoginView() {
@@ -15,6 +16,18 @@ export default function LoginView() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const getErrorMessage = (err: unknown, fallback: string) => {
+    if (err instanceof FirebaseError) {
+      return err.message || fallback;
+    }
+
+    if (err instanceof Error) {
+      return err.message || fallback;
+    }
+
+    return fallback;
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -31,11 +44,35 @@ export default function LoginView() {
       await showSuccessAlert('Login berhasil');
 
       router.push(result.redirectTo);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      const message = err.message || 'Email atau password salah.';
+      const message = getErrorMessage(err, 'Email atau password salah.');
       setError(message);
       await showErrorAlert('Login gagal', message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setError('');
+
+    try {
+      setLoading(true);
+
+      const result = await loginWithGoogle();
+
+      await showSuccessAlert('Login Google berhasil');
+
+      router.push(result.redirectTo);
+    } catch (err: unknown) {
+      console.error(err);
+      const message =
+        err instanceof FirebaseError && err.code === 'auth/popup-closed-by-user'
+          ? 'Popup login Google ditutup sebelum proses selesai.'
+          : getErrorMessage(err, 'Login dengan Google gagal.');
+      setError(message);
+      await showErrorAlert('Login Google gagal', message);
     } finally {
       setLoading(false);
     }
@@ -113,6 +150,22 @@ export default function LoginView() {
                 {loading ? 'Loading...' : 'Login'}
               </button>
             </form>
+
+            <div style={styles.divider}>
+              <span style={styles.dividerLine} />
+              <span style={styles.dividerText}>atau</span>
+              <span style={styles.dividerLine} />
+            </div>
+
+            <button
+              type="button"
+              style={styles.googleButton}
+              onClick={handleGoogleLogin}
+              disabled={loading}
+            >
+              <span style={styles.googleIcon}>G</span>
+              {loading ? 'Memproses...' : 'Masuk dengan Google'}
+            </button>
 
             <p style={styles.bottomText}>
               Belum punya akun?{' '}
@@ -254,6 +307,52 @@ const styles: { [key: string]: React.CSSProperties } = {
     color: '#dc2626',
     fontSize: '14px',
     margin: 0,
+  },
+  divider: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    marginTop: '20px',
+  },
+  dividerLine: {
+    flex: 1,
+    height: '1px',
+    backgroundColor: '#e2e8f0',
+  },
+  dividerText: {
+    color: '#94a3b8',
+    fontSize: '13px',
+    fontWeight: 600,
+    textTransform: 'uppercase',
+    letterSpacing: '0.08em',
+  },
+  googleButton: {
+    marginTop: '18px',
+    backgroundColor: '#ffffff',
+    color: '#0f172a',
+    border: '1px solid #cbd5e1',
+    borderRadius: '12px',
+    padding: '13px 18px',
+    fontSize: '15px',
+    fontWeight: 700,
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '10px',
+    boxShadow: '0 8px 20px rgba(15, 23, 42, 0.06)',
+  },
+  googleIcon: {
+    width: '24px',
+    height: '24px',
+    borderRadius: '999px',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#f8fafc',
+    color: '#ea4335',
+    fontWeight: 800,
+    fontSize: '14px',
   },
   bottomText: {
     marginTop: '20px',
