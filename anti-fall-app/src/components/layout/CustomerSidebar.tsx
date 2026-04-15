@@ -102,13 +102,6 @@ export default function CustomerSidebar({
                 })}
               </nav>
             </div>
-
-            {/* Footer */}
-            <div style={styles.footerBox}>
-              <p style={styles.footerTitle}>Status Device</p>
-              <p style={styles.footerText}>Online</p>
-              <p style={styles.footerSmall}>Last update: 2 menit lalu</p>
-            </div>
           </div>
         )}
       </aside>
