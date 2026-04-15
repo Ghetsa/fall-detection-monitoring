@@ -1,8 +1,14 @@
 import { useEffect, useState } from 'react';
-import { Download, FileDown, FileJson, FileSpreadsheet, Loader } from 'lucide-react';
+import { Download, FileDown, FileJson, FileSpreadsheet, Loader, Plus } from 'lucide-react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import ReportSummaryCard from '../../components/cards/ReportSummaryCard';
-import { getReports, getReportSummary, Report } from '../../services/reportService';
+import {
+  generateReport,
+  getReports,
+  getReportSummary,
+  Report,
+  ReportCategory,
+} from '../../services/reportService';
 import {
   buildReportRows,
   downloadExcelWorkbook,
@@ -13,29 +19,60 @@ import {
   openPdfTemplate,
 } from '../../lib/reportExports';
 import { useIsMobile } from '../../hooks/useIsMobile';
+import { showErrorAlert, showSuccessAlert } from '../../lib/alerts';
 
 export default function AdminReportsView() {
   const isMobile = useIsMobile();
   const [reports, setReports] = useState<Report[]>([]);
   const [summary, setSummary] = useState<ReportSummaryData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState(false);
+  const [category, setCategory] = useState<ReportCategory>('Incident');
+  const [periodMonth, setPeriodMonth] = useState(() => {
+    const today = new Date();
+    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+  });
+
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const [reportsData, summaryData] = await Promise.all([
+        getReports(),
+        getReportSummary(),
+      ]);
+
+      setReports(reportsData);
+      setSummary(summaryData);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    (async () => {
-      setLoading(true);
-      try {
-        const [reportsData, summaryData] = await Promise.all([
-          getReports(),
-          getReportSummary(),
-        ]);
-
-        setReports(reportsData);
-        setSummary(summaryData);
-      } finally {
-        setLoading(false);
-      }
-    })();
+    void loadData();
   }, []);
+
+  const handleGenerateReport = async () => {
+    if (!periodMonth) {
+      await showErrorAlert('Periode laporan wajib dipilih');
+      return;
+    }
+
+    setGenerating(true);
+    try {
+      await generateReport(category, periodMonth);
+      await loadData();
+      await showSuccessAlert('Laporan berhasil dibuat');
+    } catch (error) {
+      console.error('Gagal generate laporan:', error);
+      await showErrorAlert(
+        'Generate laporan gagal',
+        error instanceof Error ? error.message : 'Terjadi kesalahan saat membuat laporan.'
+      );
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   const downloadReportJson = (report: Report) => {
     const payload = {
@@ -210,6 +247,57 @@ export default function AdminReportsView() {
             description="Total laporan yang dihasilkan bulan ini."
             valueColor="#1d4ed8"
           />
+        </div>
+
+        <div style={styles.generateCard}>
+          <div style={styles.generateHeader}>
+            <div>
+              <h3 style={styles.tableTitle}>Generate Report</h3>
+              <p style={styles.generateText}>
+                Pilih kategori dan periode, lalu sistem akan membuat laporan baru dari data aktual.
+              </p>
+            </div>
+            <span style={styles.generateBadge}>Automatic</span>
+          </div>
+
+          <div style={{ ...styles.generateForm, ...(isMobile ? styles.singleColumnGrid : {}) }}>
+            <div style={styles.fieldGroup}>
+              <label style={styles.fieldLabel}>Kategori</label>
+              <select
+                style={styles.fieldInput}
+                value={category}
+                onChange={(event) => setCategory(event.target.value as ReportCategory)}
+              >
+                <option value="Incident">Incident</option>
+                <option value="Device">Device</option>
+                <option value="User">User</option>
+                <option value="System">System</option>
+              </select>
+            </div>
+
+            <div style={styles.fieldGroup}>
+              <label style={styles.fieldLabel}>Periode</label>
+              <input
+                type="month"
+                style={styles.fieldInput}
+                value={periodMonth}
+                onChange={(event) => setPeriodMonth(event.target.value)}
+              />
+            </div>
+
+            <button
+              type="button"
+              style={{
+                ...styles.generateButton,
+                ...(generating ? styles.disabledButton : {}),
+              }}
+              onClick={handleGenerateReport}
+              disabled={generating}
+            >
+              {generating ? <Loader size={16} color="#ffffff" /> : <Plus size={16} />}
+              {generating ? 'Generating...' : 'Generate Report'}
+            </button>
+          </div>
         </div>
 
         <div style={styles.tableSection}>
@@ -418,6 +506,80 @@ const styles: { [key: string]: React.CSSProperties } = {
     marginTop: '24px',
   },
   singleColumnGrid: { gridTemplateColumns: '1fr' },
+  generateCard: {
+    marginTop: '24px',
+    backgroundColor: '#ffffff',
+    borderRadius: '22px',
+    padding: '24px',
+    boxShadow: '0 10px 25px rgba(15,23,42,0.05)',
+    border: '1px solid #e2e8f0',
+  },
+  generateHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: '12px',
+    flexWrap: 'wrap',
+    marginBottom: '18px',
+  },
+  generateText: {
+    margin: '8px 0 0',
+    fontSize: '14px',
+    color: '#64748b',
+    lineHeight: 1.6,
+  },
+  generateBadge: {
+    backgroundColor: '#eff6ff',
+    color: '#1d4ed8',
+    padding: '8px 12px',
+    borderRadius: '999px',
+    fontSize: '13px',
+    fontWeight: 700,
+  },
+  generateForm: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr auto',
+    gap: '14px',
+    alignItems: 'end',
+  },
+  fieldGroup: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+  },
+  fieldLabel: {
+    fontSize: '13px',
+    fontWeight: 700,
+    color: '#334155',
+  },
+  fieldInput: {
+    width: '100%',
+    height: '44px',
+    padding: '0 14px',
+    borderRadius: '12px',
+    border: '1px solid #cbd5e1',
+    fontSize: '14px',
+    outline: 'none',
+    color: '#0f172a',
+    backgroundColor: '#ffffff',
+    boxSizing: 'border-box',
+  },
+  generateButton: {
+    height: '44px',
+    padding: '0 18px',
+    borderRadius: '12px',
+    border: 'none',
+    backgroundColor: '#2563eb',
+    color: '#ffffff',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '8px',
+    fontSize: '14px',
+    fontWeight: 700,
+    cursor: 'pointer',
+    whiteSpace: 'nowrap',
+  },
   tableSection: { marginTop: '24px' },
   tableCard: {
     backgroundColor: '#ffffff',
