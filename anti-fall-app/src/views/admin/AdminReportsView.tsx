@@ -10,6 +10,7 @@ import {
   ReportCategory,
 } from '../../services/reportService';
 import {
+  buildReportNarrative,
   buildReportRows,
   downloadExcelWorkbook,
   formatReportTimestamp,
@@ -75,6 +76,7 @@ export default function AdminReportsView() {
   };
 
   const downloadReportJson = (report: Report) => {
+    const narrative = buildReportNarrative(report);
     const payload = {
       id: report.id,
       title: report.title,
@@ -84,6 +86,7 @@ export default function AdminReportsView() {
       status: report.status,
       description: report.description,
       data: report.data ?? {},
+      narrative,
     };
 
     triggerDownload(
@@ -133,6 +136,7 @@ export default function AdminReportsView() {
   };
 
   const downloadReportPdf = (report: Report) => {
+    const narrative = buildReportNarrative(report);
     openPdfTemplate({
       title: report.title,
       subtitle: report.description,
@@ -142,16 +146,15 @@ export default function AdminReportsView() {
         { label: 'Status', value: report.status },
         { label: 'Generated', value: formatReportTimestamp(report.generatedAt) },
       ],
-      tableTitle: 'Detail Report',
-      headers: ['ID', 'Kategori', 'Periode', 'Dibuat', 'Status', 'Metric', 'Value'],
+      narrativeTitle: narrative.title,
+      narrativeIntro: narrative.intro,
+      narrativePoints: narrative.points,
+      narrativeClosing: narrative.closing,
+      tableTitle: 'Poin Laporan',
+      headers: ['Bagian', 'Uraian'],
       rows: buildReportRows(report).map((row) => [
-        String(row.id),
-        String(row.category),
-        String(row.period),
-        String(row.generatedAt),
-        String(row.status),
-        String(row.metric),
-        String(row.value),
+        String(row.bagian),
+        String(row.uraian),
       ]),
     });
   };
