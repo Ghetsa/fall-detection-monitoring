@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import { useAuth } from '../../hooks/useAuth';
@@ -76,12 +77,26 @@ export default function CustomerDashboardView() {
 
   const firstLansia = lansiaList[0] ?? null;
   const recentIncidents = incidents.slice(0, 3);
+  const hasMonitoringConnection = Boolean(firstLansia && device);
   const hasActiveFall = incidents.some(
     (i) => i.type === 'fall_detected' && !i.isResolved
   );
-  const statusLabel = hasActiveFall ? 'Bahaya!' : 'Safe';
-  const statusColor = hasActiveFall ? '#b91c1c' : '#166534';
-  const statusDotColor = hasActiveFall ? '#ef4444' : '#22c55e';
+  const statusLabel = !hasMonitoringConnection
+    ? 'Belum ada perangkat atau lansia yang terhubung'
+    : hasActiveFall ? 'Bahaya!' : 'Safe';
+  const statusColor = !hasMonitoringConnection
+    ? '#475569'
+    : hasActiveFall ? '#b91c1c' : '#166534';
+  const statusDotColor = !hasMonitoringConnection
+    ? '#94a3b8'
+    : hasActiveFall ? '#ef4444' : '#22c55e';
+  const statusDescription = loading
+    ? 'Memuat...'
+    : !hasMonitoringConnection
+      ? 'Tambahkan data lansia dan hubungkan device terlebih dahulu agar dashboard menampilkan monitoring yang relevan.'
+      : hasActiveFall
+        ? 'Terdeteksi kemungkinan jatuh!'
+        : 'Tidak ada indikasi jatuh yang terdeteksi.';
 
   const severityStyle = (sev: string) => {
     if (sev === 'danger') return styles.logStatusDanger;
@@ -129,50 +144,84 @@ export default function CustomerDashboardView() {
             <h3 style={{ ...styles.cardValue, color: loading ? '#94a3b8' : statusColor }}>
               {loading ? '—' : statusLabel}
             </h3>
-            <p style={styles.cardDescription}>
-              {loading ? 'Memuat...' : hasActiveFall ? 'Terdeteksi kemungkinan jatuh!' : 'Tidak ada indikasi jatuh yang terdeteksi.'}
-            </p>
+            <p style={styles.cardDescription}>{statusDescription}</p>
           </div>
 
-          <div style={styles.card}>
-            <p style={styles.cardLabel}>Battery Device</p>
-            <h3 style={styles.cardValue}>
-              {loading ? '—' : device ? `${device.batteryLevel}%` : '—'}
-            </h3>
-            <p style={styles.cardDescription}>
-              {device?.isOnline ? 'Device online dan aktif.' : 'Device sedang offline.'}
-            </p>
-          </div>
+          {(loading || hasMonitoringConnection) && (
+            <>
+              <div style={styles.card}>
+                <p style={styles.cardLabel}>Battery Device</p>
+                <h3 style={styles.cardValue}>
+                  {loading ? '—' : device ? `${device.batteryLevel}%` : '—'}
+                </h3>
+                <p style={styles.cardDescription}>
+                  {device?.isOnline ? 'Device online dan aktif.' : 'Device sedang offline.'}
+                </p>
+              </div>
 
-          <div style={styles.card}>
-            <p style={styles.cardLabel}>Lokasi Terakhir</p>
-            <h3 style={styles.cardValue}>
-              {loading ? '—' : device?.locationName ?? '—'}
-            </h3>
-            <p style={styles.cardDescription}>
-              {device ? `Update: ${timeAgo(device.lastSeen)}` : 'Belum ada data.'}
-            </p>
-          </div>
+              <div style={styles.card}>
+                <p style={styles.cardLabel}>Lokasi Terakhir</p>
+                <h3 style={styles.cardValue}>
+                  {loading ? '—' : device?.locationName ?? '—'}
+                </h3>
+                <p style={styles.cardDescription}>
+                  {device ? `Update: ${timeAgo(device.lastSeen)}` : 'Belum ada data.'}
+                </p>
+              </div>
 
-          <div style={styles.card}>
-            <p style={styles.cardLabel}>Total Logs Bulan Ini</p>
-            <h3 style={styles.cardValue}>{loading ? '—' : incidents.length}</h3>
-            <p style={styles.cardDescription}>
-              Total histori kejadian yang tersimpan.
-            </p>
-          </div>
+              <div style={styles.card}>
+                <p style={styles.cardLabel}>Total Logs Bulan Ini</p>
+                <h3 style={styles.cardValue}>{loading ? '—' : incidents.length}</h3>
+                <p style={styles.cardDescription}>
+                  Total histori kejadian yang tersimpan.
+                </p>
+              </div>
+            </>
+          )}
         </div>
 
-        <div style={{ ...styles.bottomGrid, ...(isMobile ? styles.singleColumnGrid : {}) }}>
-          <div style={styles.largeCard}>
-            <div style={styles.sectionHeader}>
-              <h3 style={styles.sectionTitle}>Ringkasan Monitoring</h3>
-              <span style={styles.sectionBadge}>Real-time</span>
+        {loading ? (
+          <div style={{ ...styles.bottomGrid, ...(isMobile ? styles.singleColumnGrid : {}) }}>
+            <div style={styles.largeCard}>
+              <div style={styles.sectionHeader}>
+                <h3 style={styles.sectionTitle}>Ringkasan Monitoring</h3>
+                <span style={styles.sectionBadge}>Real-time</span>
+              </div>
+              <div style={styles.loadingBox}><Loader size={20} color="#94a3b8" /></div>
             </div>
 
-            {loading ? (
+            <div style={styles.largeCard}>
+              <div style={styles.sectionHeader}>
+                <h3 style={styles.sectionTitle}>Riwayat Terbaru</h3>
+                <span style={styles.sectionBadgeAlt}>History</span>
+              </div>
               <div style={styles.loadingBox}><Loader size={20} color="#94a3b8" /></div>
-            ) : (
+            </div>
+          </div>
+        ) : !hasMonitoringConnection ? (
+          <div style={styles.emptyStateCard}>
+            <p style={styles.emptyStateLabel}>Dashboard Belum Siap</p>
+            <h3 style={styles.emptyStateTitle}>Belum ada perangkat atau lansia yang terhubung</h3>
+            <p style={styles.emptyStateDescription}>
+              Tambahkan data lansia terlebih dahulu, lalu hubungkan device yang tersedia agar dashboard bisa menampilkan baterai, lokasi terakhir, dan history monitoring.
+            </p>
+            <div style={styles.emptyStateActions}>
+              <Link href="/customer/lansia" style={styles.emptyStatePrimary}>
+                Tambah Data Lansia
+              </Link>
+              <Link href="/customer/logs" style={styles.emptyStateSecondary}>
+                Buka History
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <div style={{ ...styles.bottomGrid, ...(isMobile ? styles.singleColumnGrid : {}) }}>
+            <div style={styles.largeCard}>
+              <div style={styles.sectionHeader}>
+                <h3 style={styles.sectionTitle}>Ringkasan Monitoring</h3>
+                <span style={styles.sectionBadge}>Real-time</span>
+              </div>
+
               <div style={styles.summaryList}>
                 <div style={styles.summaryItem}>
                   <span style={styles.summaryLabel}>Nama Lansia</span>
@@ -195,32 +244,30 @@ export default function CustomerDashboardView() {
                   <span style={styles.summaryValue}>{lansiaList.length} terdaftar</span>
                 </div>
               </div>
-            )}
-          </div>
-
-          <div style={styles.largeCard}>
-            <div style={styles.sectionHeader}>
-              <h3 style={styles.sectionTitle}>Riwayat Terbaru</h3>
-              <span style={styles.sectionBadgeAlt}>Logs</span>
             </div>
 
-            {loading ? (
-              <div style={styles.loadingBox}><Loader size={20} color="#94a3b8" /></div>
-            ) : recentIncidents.length === 0 ? (
-              <p style={styles.emptyText}>Belum ada riwayat kejadian.</p>
-            ) : (
-              recentIncidents.map((inc) => (
-                <div key={inc.id} style={styles.logItem}>
-                  <div>
-                    <p style={styles.logTitle}>{inc.description.slice(0, 50)}...</p>
-                    <p style={styles.logTime}>{formatTimestamp(inc.timestamp)}</p>
+            <div style={styles.largeCard}>
+              <div style={styles.sectionHeader}>
+                <h3 style={styles.sectionTitle}>Riwayat Terbaru</h3>
+                <span style={styles.sectionBadgeAlt}>History</span>
+              </div>
+
+              {recentIncidents.length === 0 ? (
+                <p style={styles.emptyText}>Belum ada riwayat kejadian.</p>
+              ) : (
+                recentIncidents.map((inc) => (
+                  <div key={inc.id} style={styles.logItem}>
+                    <div>
+                      <p style={styles.logTitle}>{inc.description.slice(0, 50)}...</p>
+                      <p style={styles.logTime}>{formatTimestamp(inc.timestamp)}</p>
+                    </div>
+                    <span style={severityStyle(inc.severity)}>{severityLabel(inc.severity)}</span>
                   </div>
-                  <span style={severityStyle(inc.severity)}>{severityLabel(inc.severity)}</span>
-                </div>
-              ))
-            )}
+                ))
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </section>
     </DashboardLayout>
   );
@@ -262,4 +309,11 @@ const styles: { [key: string]: React.CSSProperties } = {
   logStatusWarning: { backgroundColor: '#fef3c7', color: '#92400e', padding: '8px 12px', borderRadius: '999px', fontSize: '12px', fontWeight: 700, whiteSpace: 'nowrap' },
   loadingBox: { display: 'flex', justifyContent: 'center', padding: '24px 0' },
   emptyText: { margin: 0, fontSize: '14px', color: '#94a3b8', textAlign: 'center', padding: '20px 0' },
+  emptyStateCard: { marginTop: '24px', backgroundColor: '#ffffff', borderRadius: '22px', padding: '28px', boxShadow: '0 10px 25px rgba(15,23,42,0.05)', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '14px' },
+  emptyStateLabel: { margin: 0, fontSize: '13px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#2563eb' },
+  emptyStateTitle: { margin: 0, fontSize: '28px', lineHeight: 1.2, fontWeight: 800, color: '#0f172a' },
+  emptyStateDescription: { margin: 0, fontSize: '15px', lineHeight: 1.8, color: '#475569', maxWidth: '720px' },
+  emptyStateActions: { display: 'flex', gap: '12px', flexWrap: 'wrap', marginTop: '4px' },
+  emptyStatePrimary: { textDecoration: 'none', backgroundColor: '#2563eb', color: '#ffffff', padding: '12px 18px', borderRadius: '14px', fontWeight: 700, fontSize: '14px' },
+  emptyStateSecondary: { textDecoration: 'none', backgroundColor: '#eff6ff', color: '#1d4ed8', padding: '12px 18px', borderRadius: '14px', fontWeight: 700, fontSize: '14px' },
 };

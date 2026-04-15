@@ -1,7 +1,10 @@
 import Head from 'next/head';
 import Link from 'next/link';
+import { useIsMobile } from '../hooks/useIsMobile';
 
 export default function HomePage() {
+  const isMobile = useIsMobile();
+
   return (
     <>
       <Head>
@@ -14,20 +17,20 @@ export default function HomePage() {
       </Head>
 
       <main style={styles.page}>
-        <section style={styles.heroSection}>
+        <section style={{ ...styles.heroSection, ...(isMobile ? styles.heroSectionMobile : {}) }}>
           <div style={styles.overlay} />
 
-          <nav style={styles.navbar}>
-            <div style={styles.logoWrapper}>
-              <div style={styles.logoCircle}>A</div>
-              <span style={styles.logoText}>Anti Fall App</span>
+          <nav style={{ ...styles.navbar, ...(isMobile ? styles.navbarMobile : {}) }}>
+            <div style={{ ...styles.logoWrapper, ...(isMobile ? styles.logoWrapperMobile : {}) }}>
+              <div style={{ ...styles.logoCircle, ...(isMobile ? styles.logoCircleMobile : {}) }}>A</div>
+              <span style={{ ...styles.logoText, ...(isMobile ? styles.logoTextMobile : {}) }}>Anti Fall App</span>
             </div>
 
-            <div style={styles.navActions}>
-              <Link href="/auth/login" style={styles.loginButton}>
+            <div style={{ ...styles.navActions, ...(isMobile ? styles.navActionsMobile : {}) }}>
+              <Link href="/auth/login" style={{ ...styles.loginButton, ...(isMobile ? styles.loginButtonMobile : {}) }}>
                 Login
               </Link>
-              <Link href="/auth/register" style={styles.registerButton}>
+              <Link href="/auth/register" style={{ ...styles.registerButton, ...(isMobile ? styles.registerButtonMobile : {}) }}>
                 Register
               </Link>
             </div>
@@ -197,6 +200,9 @@ const styles: { [key: string]: React.CSSProperties } = {
     padding: '24px 20px 80px',
     overflow: 'hidden',
   },
+  heroSectionMobile: {
+    padding: '16px 14px 72px',
+  },
   overlay: {
     position: 'absolute',
     inset: 0,
@@ -215,10 +221,20 @@ const styles: { [key: string]: React.CSSProperties } = {
     gap: '16px',
     flexWrap: 'wrap',
   },
+  navbarMobile: {
+    gap: '10px',
+    flexWrap: 'nowrap',
+    alignItems: 'center',
+  },
   logoWrapper: {
     display: 'flex',
     alignItems: 'center',
     gap: '12px',
+  },
+  logoWrapperMobile: {
+    gap: '10px',
+    minWidth: 0,
+    flex: 1,
   },
   logoCircle: {
     width: '42px',
@@ -232,14 +248,30 @@ const styles: { [key: string]: React.CSSProperties } = {
     fontWeight: 800,
     fontSize: '18px',
   },
+  logoCircleMobile: {
+    width: '36px',
+    height: '36px',
+    fontSize: '16px',
+    flexShrink: 0,
+  },
   logoText: {
     fontSize: '20px',
     fontWeight: 700,
+  },
+  logoTextMobile: {
+    fontSize: '16px',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
   },
   navActions: {
     display: 'flex',
     gap: '12px',
     alignItems: 'center',
+  },
+  navActionsMobile: {
+    gap: '8px',
+    flexShrink: 0,
   },
   loginButton: {
     color: '#ffffff',
@@ -249,6 +281,12 @@ const styles: { [key: string]: React.CSSProperties } = {
     border: '1px solid rgba(255,255,255,0.3)',
     fontWeight: 600,
   },
+  loginButtonMobile: {
+    padding: '8px 12px',
+    fontSize: '13px',
+    borderRadius: '9px',
+    whiteSpace: 'nowrap',
+  },
   registerButton: {
     color: '#1e3a8a',
     backgroundColor: '#ffffff',
@@ -256,6 +294,12 @@ const styles: { [key: string]: React.CSSProperties } = {
     padding: '10px 18px',
     borderRadius: '10px',
     fontWeight: 700,
+  },
+  registerButtonMobile: {
+    padding: '8px 12px',
+    fontSize: '13px',
+    borderRadius: '9px',
+    whiteSpace: 'nowrap',
   },
   heroContent: {
     position: 'relative',
