@@ -109,8 +109,7 @@ describe('customer views', () => {
         jenisKelamin: 'Perempuan',
         alamat: 'Bandar Lampung',
         noHp: '08123',
-        kontakDarurat: '08111',
-        namaKontakDarurat: 'Budi',
+        emergencyId: 'em-1',
         kondisiKesehatan: 'Hipertensi',
         deviceSerial: 'ESP32-001',
         deviceId: 'ESP32-001',
@@ -143,10 +142,13 @@ describe('customer views', () => {
     (getEmergencyByCustomer as jest.Mock).mockResolvedValue([
       {
         id: 'em-1',
+        customerId: 'customer-1',
         lansiaId: 'l1',
+        lansiaName: 'Siti',
         contactName: 'Budi',
         contactPhone: '08111',
         relationship: 'Anak',
+        isActive: true,
       },
     ]);
     (getNotificationsByCustomer as jest.Mock).mockResolvedValue([

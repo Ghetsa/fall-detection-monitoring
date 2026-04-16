@@ -5,9 +5,11 @@ import { useAuth } from '../../hooks/useAuth';
 import { getLansiaByCustomer } from '../../services/lansiaService';
 import { getDeviceByLansiaId } from '../../services/deviceService';
 import { getIncidentsByCustomer } from '../../services/incidentService';
+import { getEmergencyByCustomer } from '../../services/emergencyService';
 import { Lansia } from '../../types/lansia';
 import { Device } from '../../types/device';
 import { Incident } from '../../types/incident';
+import { Emergency } from '../../types/emergency';
 import { Loader } from 'lucide-react';
 import { useIsMobile } from '../../hooks/useIsMobile';
 
@@ -47,7 +49,17 @@ export default function CustomerDashboardView() {
   const [lansiaList, setLansiaList] = useState<Lansia[]>([]);
   const [device, setDevice] = useState<Device | null>(null);
   const [incidents, setIncidents] = useState<Incident[]>([]);
+  const [emergencyList, setEmergencyList] = useState<Emergency[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const getEmergencyForLansia = (lansia: Lansia | null): Emergency | null => {
+    if (!lansia) return null;
+    if (lansia.emergencyId) {
+      return emergencyList.find((e) => e.id === lansia.emergencyId) ?? null;
+    }
+    // Backward compat: resolve by lansiaId if lansia.emergencyId hasn't been written yet.
+    return emergencyList.find((e) => e.lansiaId === lansia.id) ?? null;
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -55,17 +67,24 @@ export default function CustomerDashboardView() {
     (async () => {
       setLoading(true);
       try {
-        const [lansiaData, incidentData] = await Promise.all([
+        const [lansiaData, incidentData, emergencyData] = await Promise.all([
           getLansiaByCustomer(user.uid),
           getIncidentsByCustomer(user.uid),
+          getEmergencyByCustomer(user.uid),
         ]);
         if (cancelled) return;
         setLansiaList(lansiaData);
         setIncidents(incidentData);
+        setEmergencyList(emergencyData);
 
-        // Load device for first active lansia
-        if (lansiaData.length > 0) {
-          const dev = await getDeviceByLansiaId(lansiaData[0].id);
+        const primary =
+          lansiaData.find((l) => l.status === 'Aktif') ?? lansiaData[0] ?? null;
+
+        // Reset device state when lansia list changes.
+        if (!cancelled) setDevice(null);
+
+        if (primary) {
+          const dev = await getDeviceByLansiaId(primary.id);
           if (!cancelled) setDevice(dev);
         }
       } finally {
@@ -75,28 +94,50 @@ export default function CustomerDashboardView() {
     return () => { cancelled = true; };
   }, [user]);
 
-  const firstLansia = lansiaList[0] ?? null;
+  const firstLansia =
+    lansiaList.find((l) => l.status === 'Aktif') ?? lansiaList[0] ?? null;
+  const currentEmergency = getEmergencyForLansia(firstLansia);
   const recentIncidents = incidents.slice(0, 3);
-  const hasMonitoringConnection = Boolean(firstLansia && device);
+  const hasLansia = Boolean(firstLansia);
+  const hasDevice = Boolean(device);
+  const hasMonitoringConnection = hasLansia && hasDevice;
   const hasActiveFall = incidents.some(
     (i) => i.type === 'fall_detected' && !i.isResolved
   );
-  const statusLabel = !hasMonitoringConnection
-    ? 'Belum ada perangkat atau lansia yang terhubung'
-    : hasActiveFall ? 'Bahaya!' : 'Safe';
-  const statusColor = !hasMonitoringConnection
+
+  const statusLabel = !hasLansia
+    ? 'Belum ada data lansia'
+    : !hasDevice
+      ? 'Device belum terhubung'
+      : hasActiveFall
+        ? 'Bahaya!'
+        : 'Safe';
+
+  const statusColor = !hasLansia
     ? '#475569'
-    : hasActiveFall ? '#b91c1c' : '#166534';
-  const statusDotColor = !hasMonitoringConnection
+    : !hasDevice
+      ? '#92400e'
+      : hasActiveFall
+        ? '#b91c1c'
+        : '#166534';
+
+  const statusDotColor = !hasLansia
     ? '#94a3b8'
-    : hasActiveFall ? '#ef4444' : '#22c55e';
+    : !hasDevice
+      ? '#f59e0b'
+      : hasActiveFall
+        ? '#ef4444'
+        : '#22c55e';
+
   const statusDescription = loading
     ? 'Memuat...'
-    : !hasMonitoringConnection
-      ? 'Tambahkan data lansia dan hubungkan device terlebih dahulu agar dashboard menampilkan monitoring yang relevan.'
-      : hasActiveFall
-        ? 'Terdeteksi kemungkinan jatuh!'
-        : 'Tidak ada indikasi jatuh yang terdeteksi.';
+    : !hasLansia
+      ? 'Tambahkan data lansia terlebih dahulu agar dashboard menampilkan monitoring yang relevan.'
+      : !hasDevice
+        ? 'Data lansia sudah tersimpan, tetapi device belum terhubung. Pilih device pada halaman Kelola Lansia.'
+        : hasActiveFall
+          ? 'Terdeteksi kemungkinan jatuh!'
+          : 'Tidak ada indikasi jatuh yang terdeteksi.';
 
   const severityStyle = (sev: string) => {
     if (sev === 'danger') return styles.logStatusDanger;
@@ -178,6 +219,38 @@ export default function CustomerDashboardView() {
               </div>
             </>
           )}
+
+          {(!loading && hasLansia && !hasDevice) && (
+            <>
+              <div style={styles.card}>
+                <p style={styles.cardLabel}>Total Lansia</p>
+                <h3 style={styles.cardValue}>{lansiaList.length}</h3>
+                <p style={styles.cardDescription}>
+                  Jumlah lansia yang sudah kamu daftarkan.
+                </p>
+              </div>
+
+              <div style={styles.card}>
+                <p style={styles.cardLabel}>Lansia Aktif</p>
+                <h3 style={styles.cardValue}>
+                  {lansiaList.filter((l) => l.status === 'Aktif').length}
+                </h3>
+                <p style={styles.cardDescription}>
+                  Lansia dengan status Aktif Dipantau.
+                </p>
+              </div>
+
+              <div style={styles.card}>
+                <p style={styles.cardLabel}>Status Device</p>
+                <h3 style={{ ...styles.cardValue, color: '#92400e' }}>
+                  Belum Terhubung
+                </h3>
+                <p style={styles.cardDescription}>
+                  Hubungkan device di halaman Kelola Lansia agar dashboard bisa menampilkan baterai dan lokasi.
+                </p>
+              </div>
+            </>
+          )}
         </div>
 
         {loading ? (
@@ -198,16 +271,32 @@ export default function CustomerDashboardView() {
               <div style={styles.loadingBox}><Loader size={20} color="#94a3b8" /></div>
             </div>
           </div>
-        ) : !hasMonitoringConnection ? (
+        ) : !hasLansia ? (
           <div style={styles.emptyStateCard}>
             <p style={styles.emptyStateLabel}>Dashboard Belum Siap</p>
-            <h3 style={styles.emptyStateTitle}>Belum ada perangkat atau lansia yang terhubung</h3>
+            <h3 style={styles.emptyStateTitle}>Belum ada data lansia</h3>
             <p style={styles.emptyStateDescription}>
-              Tambahkan data lansia terlebih dahulu, lalu hubungkan device yang tersedia agar dashboard bisa menampilkan baterai, lokasi terakhir, dan history monitoring.
+              Tambahkan data lansia terlebih dahulu agar dashboard bisa menampilkan status monitoring, device, dan history.
             </p>
             <div style={styles.emptyStateActions}>
               <Link href="/customer/lansia" style={styles.emptyStatePrimary}>
                 Tambah Data Lansia
+              </Link>
+              <Link href="/customer/logs" style={styles.emptyStateSecondary}>
+                Buka History
+              </Link>
+            </div>
+          </div>
+        ) : !hasDevice ? (
+          <div style={styles.emptyStateCard}>
+            <p style={styles.emptyStateLabel}>Device Belum Siap</p>
+            <h3 style={styles.emptyStateTitle}>Data lansia sudah ada, device belum terhubung</h3>
+            <p style={styles.emptyStateDescription}>
+              Buka Kelola Lansia, lalu pilih device yang tersedia untuk mengaktifkan monitoring real-time.
+            </p>
+            <div style={styles.emptyStateActions}>
+              <Link href="/customer/lansia" style={styles.emptyStatePrimary}>
+                Hubungkan Device
               </Link>
               <Link href="/customer/logs" style={styles.emptyStateSecondary}>
                 Buka History
@@ -237,7 +326,11 @@ export default function CustomerDashboardView() {
                 </div>
                 <div style={styles.summaryItem}>
                   <span style={styles.summaryLabel}>Kontak Darurat</span>
-                  <span style={styles.summaryValue}>{firstLansia?.kontakDarurat ?? '—'}</span>
+                  <span style={styles.summaryValue}>
+                    {currentEmergency
+                      ? `${currentEmergency.contactName} (${currentEmergency.contactPhone})`
+                      : '—'}
+                  </span>
                 </div>
                 <div style={styles.summaryItem}>
                   <span style={styles.summaryLabel}>Total Lansia</span>

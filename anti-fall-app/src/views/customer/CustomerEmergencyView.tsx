@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import { Smartphone, Users, Siren, ShieldCheck, Loader, Save } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
-import { getLansiaByCustomer } from '../../services/lansiaService';
+import { getLansiaByCustomer, updateLansia } from '../../services/lansiaService';
 import {
   getEmergencyByCustomer,
   saveEmergencyContact,
@@ -63,6 +63,16 @@ export default function CustomerEmergencyView() {
 
   const selectedLansia = lansiaList.find((l) => l.id === selectedLansiaId) ?? null;
 
+  // Backfill lansia.emergencyId for legacy data where the emergency doc exists
+  // but the lansia doc hasn't been linked yet.
+  useEffect(() => {
+    if (!selectedLansia) return;
+    const existing = emergencyList.find((e) => e.lansiaId === selectedLansia.id);
+    if (!existing) return;
+    if (selectedLansia.emergencyId === existing.id) return;
+    void updateLansia(selectedLansia.id, { emergencyId: existing.id });
+  }, [selectedLansia, emergencyList]);
+
   const handleSave = async () => {
     if (!user || !selectedLansiaId || !phone.trim()) return;
     setSaving(true);
@@ -79,8 +89,11 @@ export default function CustomerEmergencyView() {
       };
       if (existing) {
         await updateEmergencyContact(existing.id, payload);
+        // Keep lansia -> emergency relation explicit and consistent.
+        await updateLansia(selectedLansiaId, { emergencyId: existing.id });
       } else {
-        await saveEmergencyContact(payload);
+        const emergencyId = await saveEmergencyContact(payload);
+        await updateLansia(selectedLansiaId, { emergencyId });
       }
       await loadData();
       setSaved(true);

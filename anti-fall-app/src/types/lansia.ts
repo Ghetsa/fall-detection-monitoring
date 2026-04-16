@@ -6,13 +6,12 @@ export interface Lansia {
   jenisKelamin: 'Perempuan' | 'Laki-laki';
   alamat: string;
   noHp: string;
-  kontakDarurat: string;
-  namaKontakDarurat: string;
   kondisiKesehatan: string;
   deviceSerial: string;
   deviceId: string;
   status: 'Aktif' | 'Nonaktif';
   catatan: string;
+  emergencyId?: string;
   createdAt?: any;
 }
 

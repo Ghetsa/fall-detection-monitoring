@@ -7,7 +7,9 @@ import {
 import { useAuth } from '../../hooks/useAuth';
 import { getLansiaByCustomer, addLansia, updateLansia, deleteLansia } from '../../services/lansiaService';
 import { getAllDevices } from '../../services/deviceService';
+import { getEmergencyByCustomer } from '../../services/emergencyService';
 import { Device } from '../../types/device';
+import { Emergency } from '../../types/emergency';
 import { Lansia, LansiaFormData } from '../../types/lansia';
 import { useIsMobile } from '../../hooks/useIsMobile';
 
@@ -18,8 +20,6 @@ const emptyForm: LansiaFormData = {
   jenisKelamin: 'Perempuan',
   alamat: '',
   noHp: '',
-  kontakDarurat: '',
-  namaKontakDarurat: '',
   kondisiKesehatan: '',
   deviceSerial: '',
   deviceId: '',
@@ -31,6 +31,7 @@ export default function CustomerLansiaView() {
   const isMobile = useIsMobile();
   const { user } = useAuth();
   const [lansiaList, setLansiaList] = useState<Lansia[]>([]);
+  const [emergencyList, setEmergencyList] = useState<Emergency[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -46,18 +47,29 @@ export default function CustomerLansiaView() {
     if (!user) return;
     setLoading(true);
     try {
-      const [data, deviceData] = await Promise.all([
+      const [data, deviceData, emergencyData] = await Promise.all([
         getLansiaByCustomer(user.uid),
         getAllDevices(),
+        getEmergencyByCustomer(user.uid),
       ]);
       setLansiaList(data);
       setDevices(deviceData);
+      setEmergencyList(emergencyData);
     } finally {
       setLoading(false);
     }
   }, [user]);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  const getEmergencyForLansia = (lansia: Lansia): Emergency | null => {
+    if (lansia.emergencyId) {
+      return emergencyList.find((e) => e.id === lansia.emergencyId) ?? null;
+    }
+
+    // Backward compat: emergency doc already stores lansiaId, so we can still resolve it.
+    return emergencyList.find((e) => e.lansiaId === lansia.id) ?? null;
+  };
 
   const filtered = lansiaList.filter((l) => {
     const q = searchQuery.toLowerCase();
@@ -82,8 +94,6 @@ export default function CustomerLansiaView() {
       jenisKelamin: lansia.jenisKelamin,
       alamat: lansia.alamat,
       noHp: lansia.noHp,
-      kontakDarurat: lansia.kontakDarurat,
-      namaKontakDarurat: lansia.namaKontakDarurat,
       kondisiKesehatan: lansia.kondisiKesehatan,
       deviceSerial: lansia.deviceSerial,
       deviceId: lansia.deviceId,
@@ -260,8 +270,15 @@ export default function CustomerLansiaView() {
                     </td>
                     <td style={styles.td}><span style={styles.cellText}>{lansia.noHp}</span></td>
                     <td style={styles.td}>
-                      <p style={styles.cellText}>{lansia.namaKontakDarurat}</p>
-                      <p style={styles.cellSubtext}>{lansia.kontakDarurat}</p>
+                      {(() => {
+                        const emergency = getEmergencyForLansia(lansia);
+                        return (
+                          <>
+                            <p style={styles.cellText}>{emergency?.contactName ?? '-'}</p>
+                            <p style={styles.cellSubtext}>{emergency?.contactPhone ?? '-'}</p>
+                          </>
+                        );
+                      })()}
                     </td>
                     <td style={styles.td}><span style={styles.deviceBadge}>{lansia.deviceSerial || '—'}</span></td>
                     <td style={styles.td}>
@@ -293,13 +310,20 @@ export default function CustomerLansiaView() {
               <button style={styles.closeBtn} onClick={() => setModalOpen(false)}><X size={18} /></button>
             </div>
             <div style={styles.modalBody}>
+              {/*
+
+
+
+
+                  : '-';
+
+                return (
+              */}
               <div style={{ ...styles.formGrid, ...(isMobile ? styles.singleColumnGrid : {}) }}>
                 {([
                   { label: 'Nama Lengkap *', key: 'nama', icon: <User size={15} />, type: 'text', placeholder: 'Nama lengkap lansia' },
                   { label: 'Usia', key: 'usia', icon: <Calendar size={15} />, type: 'number', placeholder: '60' },
                   { label: 'No. HP Lansia', key: 'noHp', icon: <Phone size={15} />, type: 'text', placeholder: '08xxxxxxxxxx' },
-                  { label: 'Nama Kontak Darurat', key: 'namaKontakDarurat', icon: <User size={15} />, type: 'text', placeholder: 'Nama keluarga' },
-                  { label: 'No. Kontak Darurat', key: 'kontakDarurat', icon: <Phone size={15} />, type: 'text', placeholder: '08xxxxxxxxxx' },
                 ] as const).map(({ label, key, icon, type, placeholder }) => (
                   <div key={key} style={styles.fieldGroup}>
                     <label style={styles.label}>{label}</label>
@@ -410,7 +434,10 @@ export default function CustomerLansiaView() {
                   { icon: <AlertCircle size={14} />, label: 'Alamat', value: detailTarget.alamat || '—' },
                   { icon: <Heart size={14} />, label: 'Kondisi Kesehatan', value: detailTarget.kondisiKesehatan || '—' },
                   { icon: <Cpu size={14} />, label: 'Serial Device', value: detailTarget.deviceSerial || '—', highlight: true },
-                  { icon: <User size={14} />, label: 'Kontak Darurat', value: `${detailTarget.namaKontakDarurat} (${detailTarget.kontakDarurat})` },
+                  { icon: <User size={14} />, label: 'Kontak Darurat', value: (() => {
+                    const emergency = getEmergencyForLansia(detailTarget);
+                    return emergency ? `${emergency.contactName} (${emergency.contactPhone})` : '-';
+                  })() },
                 ].map(({ icon, label, value, highlight }) => (
                   <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, padding: '10px 0', borderBottom: '1px solid #e2e8f0', flexWrap: 'wrap' as const }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#64748b' }}>

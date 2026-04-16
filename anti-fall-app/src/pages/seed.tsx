@@ -21,6 +21,11 @@ const LANSIA_ID_1 = 'lansia_001';
 const LANSIA_ID_2 = 'lansia_002';
 const LANSIA_ID_3 = 'lansia_003';
 
+// Emergency contact IDs (will be used as Firestore doc IDs)
+const EMERGENCY_ID_1 = 'emergency_001';
+const EMERGENCY_ID_2 = 'emergency_002';
+const EMERGENCY_ID_3 = 'emergency_003';
+
 // Device serial / IDs
 const DEVICE_ID_1 = 'ESP32-001';
 const DEVICE_ID_2 = 'ESP32-002';
@@ -82,8 +87,7 @@ const seedLansia = async () => {
     jenisKelamin: 'Perempuan',
     alamat: 'Jl. Raden Intan No. 12, Bandar Lampung',
     noHp: '085678901234',
-    kontakDarurat: '081234567890',
-    namaKontakDarurat: 'Budi Santoso',
+    emergencyId: EMERGENCY_ID_1,
     kondisiKesehatan: 'Hipertensi, Diabetes Tipe 2',
     deviceSerial: DEVICE_ID_1,
     deviceId: DEVICE_ID_1,
@@ -99,8 +103,7 @@ const seedLansia = async () => {
     jenisKelamin: 'Laki-laki',
     alamat: 'Jl. Kartini No. 5, Tanjung Karang',
     noHp: '082345678901',
-    kontakDarurat: '081234567890',
-    namaKontakDarurat: 'Budi Santoso',
+    emergencyId: EMERGENCY_ID_2,
     kondisiKesehatan: 'Osteoporosis, Rematik',
     deviceSerial: DEVICE_ID_2,
     deviceId: DEVICE_ID_2,
@@ -116,8 +119,7 @@ const seedLansia = async () => {
     jenisKelamin: 'Laki-laki',
     alamat: 'Jl. Gajah Mada No. 3, Way Halim',
     noHp: '083456789012',
-    kontakDarurat: '087654321098',
-    namaKontakDarurat: 'Dewi Prasetyo',
+    emergencyId: EMERGENCY_ID_3,
     kondisiKesehatan: 'Parkinson ringan',
     deviceSerial: DEVICE_ID_3,
     deviceId: DEVICE_ID_3,
@@ -383,9 +385,9 @@ export default function SeedPage() {
         await setDoc(doc(db, 'users', CUSTOMER_UID_2), { uid: CUSTOMER_UID_2, fullName: 'Dewi Prasetyo', email: 'dewi@gmail.com', role: 'customer', phone: '087654321098', address: 'Jl. Kartini No. 12, Tanjung Karang', createdAt: daysAgo(20) });
       },
       lansia: async () => {
-        await setDoc(doc(db, 'lansia', LANSIA_ID_1), { customerId: REAL_UID, nama: 'Siti Rahayu', usia: 72, jenisKelamin: 'Perempuan', alamat: 'Jl. Raden Intan No. 12, Bandar Lampung', noHp: '085678901234', kontakDarurat: '081234567890', namaKontakDarurat: 'Budi Santoso', kondisiKesehatan: 'Hipertensi, Diabetes Tipe 2', deviceSerial: DEVICE_ID_1, deviceId: DEVICE_ID_1, status: 'Aktif', catatan: 'Rutin kontrol tekanan darah setiap minggu.', createdAt: daysAgo(25) });
-        await setDoc(doc(db, 'lansia', LANSIA_ID_2), { customerId: REAL_UID, nama: 'Hadi Prasetyo', usia: 68, jenisKelamin: 'Laki-laki', alamat: 'Jl. Kartini No. 5, Tanjung Karang', noHp: '082345678901', kontakDarurat: '081234567890', namaKontakDarurat: 'Budi Santoso', kondisiKesehatan: 'Osteoporosis, Rematik', deviceSerial: DEVICE_ID_2, deviceId: DEVICE_ID_2, status: 'Aktif', catatan: 'Perlu bantuan saat berjalan di permukaan licin.', createdAt: daysAgo(20) });
-        await setDoc(doc(db, 'lansia', LANSIA_ID_3), { customerId: CUSTOMER_UID_2, nama: 'Slamet Wiyono', usia: 75, jenisKelamin: 'Laki-laki', alamat: 'Jl. Gajah Mada No. 3, Way Halim', noHp: '083456789012', kontakDarurat: '087654321098', namaKontakDarurat: 'Dewi Prasetyo', kondisiKesehatan: 'Parkinson ringan', deviceSerial: DEVICE_ID_3, deviceId: DEVICE_ID_3, status: 'Aktif', catatan: 'Butuh pemantauan ketat saat malam hari.', createdAt: daysAgo(10) });
+        await setDoc(doc(db, 'lansia', LANSIA_ID_1), { customerId: REAL_UID, nama: 'Siti Rahayu', usia: 72, jenisKelamin: 'Perempuan', alamat: 'Jl. Raden Intan No. 12, Bandar Lampung', noHp: '085678901234', emergencyId: EMERGENCY_ID_1, kondisiKesehatan: 'Hipertensi, Diabetes Tipe 2', deviceSerial: DEVICE_ID_1, deviceId: DEVICE_ID_1, status: 'Aktif', catatan: 'Rutin kontrol tekanan darah setiap minggu.', createdAt: daysAgo(25) });
+        await setDoc(doc(db, 'lansia', LANSIA_ID_2), { customerId: REAL_UID, nama: 'Hadi Prasetyo', usia: 68, jenisKelamin: 'Laki-laki', alamat: 'Jl. Kartini No. 5, Tanjung Karang', noHp: '082345678901', emergencyId: EMERGENCY_ID_2, kondisiKesehatan: 'Osteoporosis, Rematik', deviceSerial: DEVICE_ID_2, deviceId: DEVICE_ID_2, status: 'Aktif', catatan: 'Perlu bantuan saat berjalan di permukaan licin.', createdAt: daysAgo(20) });
+        await setDoc(doc(db, 'lansia', LANSIA_ID_3), { customerId: CUSTOMER_UID_2, nama: 'Slamet Wiyono', usia: 75, jenisKelamin: 'Laki-laki', alamat: 'Jl. Gajah Mada No. 3, Way Halim', noHp: '083456789012', emergencyId: EMERGENCY_ID_3, kondisiKesehatan: 'Parkinson ringan', deviceSerial: DEVICE_ID_3, deviceId: DEVICE_ID_3, status: 'Aktif', catatan: 'Butuh pemantauan ketat saat malam hari.', createdAt: daysAgo(10) });
       },
       devices: async () => {
         await setDoc(doc(db, 'devices', DEVICE_ID_1), { serial: DEVICE_ID_1, lansiaId: LANSIA_ID_1, customerId: REAL_UID, batteryLevel: 87, isOnline: true, lastSeen: hoursAgo(0), firmware: 'v2.1.0', model: 'ESP32-WROOM-32', latitude: -5.4292, longitude: 105.2610, locationName: 'Bandar Lampung', createdAt: daysAgo(25) });
@@ -408,10 +410,9 @@ export default function SeedPage() {
         for (const e of entries) await addDoc(col, e);
       },
       emergency: async () => {
-        const col = collection(db, 'emergency');
-        await addDoc(col, { customerId: REAL_UID, lansiaId: LANSIA_ID_1, lansiaName: 'Siti Rahayu', contactName: 'Budi Santoso', contactPhone: '081234567890', relationship: 'Anak', isActive: true, updatedAt: daysAgo(25) });
-        await addDoc(col, { customerId: REAL_UID, lansiaId: LANSIA_ID_2, lansiaName: 'Hadi Prasetyo', contactName: 'Budi Santoso', contactPhone: '081234567890', relationship: 'Keponakan', isActive: true, updatedAt: daysAgo(20) });
-        await addDoc(col, { customerId: CUSTOMER_UID_2, lansiaId: LANSIA_ID_3, lansiaName: 'Slamet Wiyono', contactName: 'Dewi Prasetyo', contactPhone: '087654321098', relationship: 'Anak', isActive: true, updatedAt: daysAgo(10) });
+        await setDoc(doc(db, 'emergency', EMERGENCY_ID_1), { customerId: REAL_UID, lansiaId: LANSIA_ID_1, lansiaName: 'Siti Rahayu', contactName: 'Budi Santoso', contactPhone: '081234567890', relationship: 'Anak', isActive: true, updatedAt: daysAgo(25) });
+        await setDoc(doc(db, 'emergency', EMERGENCY_ID_2), { customerId: REAL_UID, lansiaId: LANSIA_ID_2, lansiaName: 'Hadi Prasetyo', contactName: 'Budi Santoso', contactPhone: '081234567890', relationship: 'Keponakan', isActive: true, updatedAt: daysAgo(20) });
+        await setDoc(doc(db, 'emergency', EMERGENCY_ID_3), { customerId: CUSTOMER_UID_2, lansiaId: LANSIA_ID_3, lansiaName: 'Slamet Wiyono', contactName: 'Dewi Prasetyo', contactPhone: '087654321098', relationship: 'Anak', isActive: true, updatedAt: daysAgo(10) });
       },
       broadcasts: () => seedBroadcasts(),
       reports: () => seedReports(),

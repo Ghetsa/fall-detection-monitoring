@@ -85,7 +85,7 @@ export default function CustomerLogsView() {
           </div>
 
           <div style={{ ...styles.countBadge, ...(isMobile ? styles.countBadgeMobile : {}) }}>
-            {loading ? '-' : totalHistoryCount + ' Total History'}
+            Total History: {loading ? '-' : totalHistoryCount}
           </div>
         </div>
 
