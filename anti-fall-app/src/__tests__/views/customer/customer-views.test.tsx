@@ -12,6 +12,7 @@ import { useIsMobile } from '../../../hooks/useIsMobile';
 import { getLansiaByCustomer, addLansia, updateLansia, deleteLansia } from '../../../services/lansiaService';
 import { getDeviceByLansiaId } from '../../../services/deviceService';
 import { getIncidentsByCustomer } from '../../../services/incidentService';
+import { getBroadcastsForRole } from '../../../services/broadcastService';
 import {
   getEmergencyByCustomer,
   saveEmergencyContact,
@@ -61,6 +62,10 @@ jest.mock('../../../services/deviceService', () => ({
 
 jest.mock('../../../services/incidentService', () => ({
   getIncidentsByCustomer: jest.fn(),
+}));
+
+jest.mock('../../../services/broadcastService', () => ({
+  getBroadcastsForRole: jest.fn(),
 }));
 
 jest.mock('../../../services/emergencyService', () => ({
@@ -155,6 +160,16 @@ describe('customer views', () => {
         createdAt: new Date('2026-04-14T10:00:00Z'),
       },
     ]);
+    (getBroadcastsForRole as jest.Mock).mockResolvedValue([
+      {
+        id: 'b1',
+        title: 'Maintenance',
+        message: 'Sistem maintenance malam ini',
+        type: 'info',
+        targetRole: 'all',
+        createdAt: new Date('2026-04-14T10:00:00Z'),
+      },
+    ]);
     (getUserById as jest.Mock).mockResolvedValue({
       fullName: 'Customer User',
       email: 'customer@test.com',
@@ -197,17 +212,23 @@ describe('customer views', () => {
     expect(screen.getByText('Tambah Lansia Baru')).toBeInTheDocument();
   });
 
-  it('renders activity logs table', async () => {
+  it('renders monitoring history list', async () => {
     render(<CustomerLogsView />);
-    expect(await screen.findByText('Fall Detected')).toBeInTheDocument();
-    expect(screen.getByText('Bandar Lampung')).toBeInTheDocument();
+    expect(await screen.findByText('Monitoring History')).toBeInTheDocument();
+    expect(await screen.findByText(/Ada notifikasi penting/i)).toBeInTheDocument();
   });
 
-  it('marks all notifications as read', async () => {
+  it('renders broadcasts in notifications page', async () => {
     render(<CustomerNotificationsView />);
+    expect(await screen.findByText('Maintenance')).toBeInTheDocument();
+    expect(screen.getByText(/Sistem maintenance malam ini/i)).toBeInTheDocument();
+  });
+
+  it('marks all monitoring history alerts as read', async () => {
+    render(<CustomerLogsView />);
     const user = userEvent.setup();
 
-    expect(await screen.findByText(/1 notifikasi belum dibaca/i)).toBeInTheDocument();
+    expect(await screen.findByText(/1 alert belum dibaca/i)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /Tandai Semua Dibaca/i }));
 
     await waitFor(() =>

@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
-import { Bell, AlertTriangle, ShieldCheck, BatteryWarning, Loader, CheckCheck } from 'lucide-react';
+import { BellRing, Info, Loader, Megaphone, ShieldAlert } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
-import { getNotificationsByCustomer, markAllNotificationsRead } from '../../services/notificationService';
-import { Notification } from '../../types/notification';
+import { getBroadcastsForRole } from '../../services/broadcastService';
+import { Broadcast } from '../../types/broadcast';
 import { useIsMobile } from '../../hooks/useIsMobile';
 
 function formatTimestamp(ts: unknown): string {
@@ -19,63 +19,157 @@ function formatTimestamp(ts: unknown): string {
   });
 }
 
+const broadcastTypeMeta: Record<
+  Broadcast['type'],
+  { label: string; badgeStyle: React.CSSProperties; icon: JSX.Element }
+> = {
+  info: {
+    label: 'Info',
+    badgeStyle: { backgroundColor: '#eff6ff', color: '#1d4ed8' },
+    icon: <Info size={18} />,
+  },
+  warning: {
+    label: 'Warning',
+    badgeStyle: { backgroundColor: '#fef3c7', color: '#92400e' },
+    icon: <BellRing size={18} />,
+  },
+  urgent: {
+    label: 'Urgent',
+    badgeStyle: { backgroundColor: '#fee2e2', color: '#b91c1c' },
+    icon: <ShieldAlert size={18} />,
+  },
+};
+
+function targetRoleLabel(targetRole: Broadcast['targetRole']): string {
+  if (targetRole === 'all') return 'Semua User';
+  if (targetRole === 'admin') return 'Admin';
+  return 'Customer';
+}
+
 export default function CustomerNotificationsView() {
   const isMobile = useIsMobile();
-  const { user } = useAuth();
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const { role } = useAuth();
+  const [broadcasts, setBroadcasts] = useState<Broadcast[]>([]);
   const [loading, setLoading] = useState(true);
-  const [marking, setMarking] = useState(false);
 
   const loadData = useCallback(async () => {
-    if (!user) return;
+    const resolvedRole: 'admin' | 'customer' =
+      role === 'admin' ? 'admin' : 'customer';
+
     setLoading(true);
     try {
-      const data = await getNotificationsByCustomer(user.uid);
-      setNotifications(data);
+      const data = await getBroadcastsForRole(resolvedRole);
+      setBroadcasts(data);
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [role]);
 
-  useEffect(() => { loadData(); }, [loadData]);
-
-  const unreadCount = notifications.filter((n) => !n.isRead).length;
-
-  const handleMarkAll = async () => {
-    if (!user || unreadCount === 0) return;
-    setMarking(true);
-    try {
-      await markAllNotificationsRead(user.uid);
-      await loadData();
-    } finally {
-      setMarking(false);
-    }
-  };
-
-  const getIcon = (type: string) => {
-    if (type === 'danger') return <AlertTriangle size={20} />;
-    if (type === 'warning') return <BatteryWarning size={20} />;
-    return <ShieldCheck size={20} />;
-  };
+  useEffect(() => {
+    void loadData();
+  }, [loadData]);
 
   return (
     <DashboardLayout
       role="customer"
       title="Notifications"
-      subtitle="Pemberitahuan dari sistem monitoring"
+      subtitle="Broadcast dari admin/developer"
     >
       <section style={styles.content}>
         <div style={{ ...styles.heroCard, ...(isMobile ? styles.heroCardMobile : {}) }}>
           <div>
-            <p style={styles.heroLabel}>Notifications</p>
-            <h2 style={styles.heroTitle}>Notifikasi Sistem</h2>
+            <p style={styles.heroLabel}>Broadcast</p>
+            <h2 style={styles.heroTitle}>Pengumuman Admin</h2>
             <p style={styles.heroText}>
-              Semua pemberitahuan penting akan muncul di sini secara real-time.
+              Halaman ini hanya menampilkan broadcast resmi dari admin/developer.
             </p>
           </div>
 
           <div style={{ ...styles.countBadge, ...(isMobile ? styles.countBadgeMobile : {}) }}>
-            <Bell size={18} />
+            <Megaphone size={18} />
+            <span>{loading ? 'â€”' : `${broadcasts.length} Broadcast`}</span>
+          </div>
+        </div>
+
+        {loading ? (
+          <div style={styles.loadingBox}><Loader size={28} color="#94a3b8" /></div>
+        ) : broadcasts.length === 0 ? (
+          <div style={styles.emptyBox}>
+            <Megaphone size={40} color="#cbd5e1" />
+            <p style={styles.emptyText}>Belum ada broadcast.</p>
+          </div>
+        ) : (
+          <div style={styles.list}>
+            {broadcasts.map((b) => {
+              const meta = broadcastTypeMeta[b.type];
+              const borderColor =
+                b.type === 'urgent' ? '#ef4444' : b.type === 'warning' ? '#f59e0b' : '#2563eb';
+
+              return (
+                <div key={b.id} style={{ ...styles.card, borderLeft: `4px solid ${borderColor}` }}>
+                  <div style={styles.left}>
+                    <span style={{ ...styles.icon, ...meta.badgeStyle }}>{meta.icon}</span>
+
+                    <div>
+                      <p style={styles.title}>{b.title}</p>
+                      <p style={styles.desc}>{b.message}</p>
+                      <p style={styles.time}>{formatTimestamp(b.createdAt)}</p>
+                    </div>
+                  </div>
+
+                  <div style={styles.metaRight}>
+                    <span style={{ ...styles.badge, ...meta.badgeStyle }}>{meta.label}</span>
+                    <span style={styles.targetBadge}>{targetRoleLabel(b.targetRole)}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
+    </DashboardLayout>
+  );
+}
+
+/* Legacy UI: moved to History page.
+function LegacyCustomerNotificationsView() {
+  const isMobile = useIsMobile();
+  const { role } = useAuth();
+  const [broadcasts, setBroadcasts] = useState<Broadcast[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const loadData = useCallback(async () => {
+    const resolvedRole: 'admin' | 'customer' =
+      role === 'admin' ? 'admin' : 'customer';
+    setLoading(true);
+    try {
+      const data = await getBroadcastsForRole(resolvedRole);
+      setBroadcasts(data);
+    } finally {
+      setLoading(false);
+    }
+  }, [role]);
+
+  useEffect(() => { loadData(); }, [loadData]);
+
+  return (
+    <DashboardLayout
+      role="customer"
+      title="Notifications"
+      subtitle="Broadcast dari admin/developer"
+    >
+      <section style={styles.content}>
+        <div style={{ ...styles.heroCard, ...(isMobile ? styles.heroCardMobile : {}) }}>
+          <div>
+            <p style={styles.heroLabel}>Broadcast</p>
+            <h2 style={styles.heroTitle}>Pengumuman Admin</h2>
+            <p style={styles.heroText}>
+              Halaman ini hanya menampilkan broadcast resmi dari admin/developer.
+            </p>
+          </div>
+
+          <div style={{ ...styles.countBadge, ...(isMobile ? styles.countBadgeMobile : {}) }}>
+            <Megaphone size={18} />
             <span>{loading ? '—' : `${notifications.length} Notifikasi`}</span>
           </div>
         </div>
@@ -150,6 +244,8 @@ export default function CustomerNotificationsView() {
   );
 }
 
+*/
+
 const styles: { [key: string]: React.CSSProperties } = {
   content: { padding: '5px' },
   heroCard: { background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)', color: '#fff', borderRadius: '24px', padding: '28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' },
@@ -176,6 +272,8 @@ const styles: { [key: string]: React.CSSProperties } = {
   desc: { margin: '4px 0', fontSize: '13px', color: '#64748b', lineHeight: 1.6 },
   time: { margin: 0, fontSize: '12px', color: '#94a3b8' },
   badge: { padding: '8px 12px', borderRadius: '999px', fontWeight: 700, fontSize: '12px', whiteSpace: 'nowrap', flexShrink: 0 },
+  metaRight: { display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0, flexWrap: 'wrap' },
+  targetBadge: { padding: '8px 12px', borderRadius: '999px', fontWeight: 800, fontSize: '12px', whiteSpace: 'nowrap', flexShrink: 0, backgroundColor: '#f1f5f9', color: '#475569' },
   badgeDanger: { backgroundColor: '#fee2e2', color: '#b91c1c' },
   badgeWarning: { backgroundColor: '#fef3c7', color: '#92400e' },
   badgeSafe: { backgroundColor: '#dcfce7', color: '#166534' },

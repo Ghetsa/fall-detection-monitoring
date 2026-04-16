@@ -13,7 +13,7 @@ import {
   updateDoc,
   where,
 } from 'firebase/firestore';
-import { getAllBroadcasts, getBroadcastsForCustomer, sendBroadcast } from '../../services/broadcastService';
+import { getAllBroadcasts, getBroadcastsForCustomer, getBroadcastsForRole, sendBroadcast } from '../../services/broadcastService';
 import {
   getAllDevices,
   getDeviceByLansiaId,
@@ -96,6 +96,16 @@ describe('firestore services', () => {
           { id: 'customer-1', data: { targetRole: 'customer', createdAt: { seconds: 3 } } },
           { id: 'all-1', data: { targetRole: 'all', createdAt: { seconds: 2 } } },
         ]),
+      })
+      .mockResolvedValueOnce({
+        docs: makeDocs([
+          { id: 'all-2', data: { targetRole: 'all', createdAt: { seconds: 5 } } },
+        ]),
+      })
+      .mockResolvedValueOnce({
+        docs: makeDocs([
+          { id: 'admin-1', data: { targetRole: 'admin', createdAt: { seconds: 6 } } },
+        ]),
       });
     (addDoc as jest.Mock).mockResolvedValue({ id: 'broadcast-new' });
 
@@ -105,6 +115,10 @@ describe('firestore services', () => {
     await expect(getBroadcastsForCustomer()).resolves.toEqual([
       { id: 'customer-1', targetRole: 'customer', createdAt: { seconds: 3 } },
       { id: 'all-1', targetRole: 'all', createdAt: { seconds: 2 } },
+    ]);
+    await expect(getBroadcastsForRole('admin')).resolves.toEqual([
+      { id: 'admin-1', targetRole: 'admin', createdAt: { seconds: 6 } },
+      { id: 'all-2', targetRole: 'all', createdAt: { seconds: 5 } },
     ]);
     await expect(
       sendBroadcast({ title: 'Alert', message: 'Msg', type: 'info', targetRole: 'all', isActive: true, createdBy: 'admin' } as any)

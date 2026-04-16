@@ -112,7 +112,6 @@ export default function AdminDashboardView() {
           <div style={styles.largeCard}>
             <div style={styles.sectionHeader}>
               <h3 style={styles.sectionTitle}>Recent Incidents</h3>
-              <span style={styles.sectionBadge}>Today</span>
             </div>
 
             {loading ? (
