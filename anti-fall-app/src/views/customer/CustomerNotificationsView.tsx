@@ -21,7 +21,7 @@ function formatTimestamp(ts: unknown): string {
 
 const broadcastTypeMeta: Record<
   Broadcast['type'],
-  { label: string; badgeStyle: React.CSSProperties; icon: JSX.Element }
+  { label: string; badgeStyle: React.CSSProperties; icon: React.ReactNode }
 > = {
   info: {
     label: 'Info',
@@ -87,7 +87,7 @@ export default function CustomerNotificationsView() {
 
           <div style={{ ...styles.countBadge, ...(isMobile ? styles.countBadgeMobile : {}) }}>
             <Megaphone size={18} />
-            <span>{loading ? 'â€”' : `${broadcasts.length} Broadcast`}</span>
+            <span>{loading ? '-' : `${broadcasts.length} Broadcast`}</span>
           </div>
         </div>
 
