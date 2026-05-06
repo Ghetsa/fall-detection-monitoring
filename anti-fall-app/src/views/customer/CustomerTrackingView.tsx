@@ -189,10 +189,16 @@ export default function CustomerTrackingView() {
                   <div style={styles.detailBox}>
                     <p style={styles.detailTitle}>Detail teknis</p>
                     <p style={styles.detailText}>
-                      Koordinat: {device.latitude.toFixed(4)}, {device.longitude.toFixed(4)}
+                      Koordinat:{' '}
+                      {typeof (device.lastLocation?.latitude ?? device.latitude) === 'number' &&
+                      typeof (device.lastLocation?.longitude ?? device.longitude) === 'number'
+                        ? `${(device.lastLocation?.latitude ?? device.latitude)!.toFixed(4)}, ${(device.lastLocation?.longitude ?? device.longitude)!.toFixed(4)}`
+                        : '—'}
                     </p>
-                    <p style={styles.detailText}>Serial: {device.serial}</p>
-                    <p style={styles.detailText}>Battery: {device.batteryLevel}%</p>
+                    <p style={styles.detailText}>Device ID: {device.deviceId ?? device.serial ?? device.id}</p>
+                    <p style={styles.detailText}>
+                      Battery: {device.lastLocation?.batteryLevel ?? device.batteryLevel ?? '—'}%
+                    </p>
                     <p style={styles.detailText}>Firmware: {device.firmware}</p>
                   </div>
                 )}

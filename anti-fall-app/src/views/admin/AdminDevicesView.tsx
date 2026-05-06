@@ -66,10 +66,14 @@ export default function AdminDevicesView() {
     const keyword = search.trim().toLowerCase();
     if (!keyword) return true;
 
+    const idText = (device.deviceId ?? device.serial ?? device.id ?? '').toLowerCase();
+    const locationText = (device.lastLocation?.locationName ?? device.locationName ?? '').toLowerCase();
+    const modelText = (device.model ?? '').toLowerCase();
+
     return (
-      device.serial.toLowerCase().includes(keyword) ||
-      device.locationName.toLowerCase().includes(keyword) ||
-      device.model.toLowerCase().includes(keyword)
+      idText.includes(keyword) ||
+      locationText.includes(keyword) ||
+      modelText.includes(keyword)
     );
   });
 

@@ -3,12 +3,12 @@ import { useState, useEffect } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import { useAuth } from '../../hooks/useAuth';
 import { getLansiaByCustomer } from '../../services/lansiaService';
-import { getDeviceByLansiaId } from '../../services/deviceService';
-import { getIncidentsByCustomer } from '../../services/incidentService';
+import { getDeviceByDeviceId } from '../../services/deviceService';
+import { getNotificationsByCustomer } from '../../services/notificationService';
 import { getEmergencyByCustomer } from '../../services/emergencyContactService';
 import { Lansia } from '../../types/lansia';
 import { Device } from '../../types/device';
-import { Incident } from '../../types/incident';
+import { Notification } from '../../types/notification';
 import { EmergencyContact } from '../../types/emergency';
 import { Loader } from 'lucide-react';
 import { useIsMobile } from '../../hooks/useIsMobile';
@@ -48,7 +48,7 @@ export default function CustomerDashboardView() {
   const { user } = useAuth();
   const [lansiaList, setLansiaList] = useState<Lansia[]>([]);
   const [device, setDevice] = useState<Device | null>(null);
-  const [incidents, setIncidents] = useState<Incident[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [emergencyList, setEmergencyList] = useState<EmergencyContact[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -67,14 +67,14 @@ export default function CustomerDashboardView() {
     (async () => {
       setLoading(true);
       try {
-        const [lansiaData, incidentData, emergencyData] = await Promise.all([
+        const [lansiaData, notificationData, emergencyData] = await Promise.all([
           getLansiaByCustomer(user.uid),
-          getIncidentsByCustomer(user.uid),
+          getNotificationsByCustomer(user.uid),
           getEmergencyByCustomer(user.uid),
         ]);
         if (cancelled) return;
         setLansiaList(lansiaData);
-        setIncidents(incidentData);
+        setNotifications(notificationData);
         setEmergencyList(emergencyData);
 
         const primary =
@@ -83,8 +83,8 @@ export default function CustomerDashboardView() {
         // Reset device state when lansia list changes.
         if (!cancelled) setDevice(null);
 
-        if (primary) {
-          const dev = await getDeviceByLansiaId(primary.id);
+        if (primary?.deviceId) {
+          const dev = await getDeviceByDeviceId(primary.deviceId);
           if (!cancelled) setDevice(dev);
         }
       } finally {
@@ -97,13 +97,15 @@ export default function CustomerDashboardView() {
   const firstLansia =
     lansiaList.find((l) => l.status === 'Aktif') ?? lansiaList[0] ?? null;
   const currentEmergency = getEmergencyForLansia(firstLansia);
-  const recentIncidents = incidents.slice(0, 3);
+  const recentHistory = notifications.slice(0, 3);
   const hasLansia = Boolean(firstLansia);
   const hasDevice = Boolean(device);
   const hasMonitoringConnection = hasLansia && hasDevice;
-  const hasActiveFall = incidents.some(
-    (i) => i.type === 'fall_detected' && !i.isResolved
-  );
+  const hasActiveFall = notifications.some((n) => n.type === 'danger' && !n.isRead);
+
+  const deviceBattery = device?.lastLocation?.batteryLevel ?? device?.batteryLevel ?? null;
+  const deviceLocationName = device?.lastLocation?.locationName ?? device?.locationName ?? null;
+  const deviceLastUpdate = device?.lastLocation?.recordedAt ?? device?.lastSeen ?? null;
 
   const statusLabel = !hasLansia
     ? 'Belum ada data lansia'
@@ -193,7 +195,7 @@ export default function CustomerDashboardView() {
               <div style={styles.card}>
                 <p style={styles.cardLabel}>Battery Device</p>
                 <h3 style={styles.cardValue}>
-                  {loading ? '—' : device ? `${device.batteryLevel}%` : '—'}
+                  {loading ? '—' : deviceBattery !== null ? `${deviceBattery}%` : '—'}
                 </h3>
                 <p style={styles.cardDescription}>
                   {device?.isOnline ? 'Device online dan aktif.' : 'Device sedang offline.'}
@@ -203,18 +205,18 @@ export default function CustomerDashboardView() {
               <div style={styles.card}>
                 <p style={styles.cardLabel}>Lokasi Terakhir</p>
                 <h3 style={styles.cardValue}>
-                  {loading ? '—' : device?.locationName ?? '—'}
+                  {loading ? '—' : deviceLocationName ?? '—'}
                 </h3>
                 <p style={styles.cardDescription}>
-                  {device ? `Update: ${timeAgo(device.lastSeen)}` : 'Belum ada data.'}
+                  {deviceLastUpdate ? `Update: ${timeAgo(deviceLastUpdate)}` : 'Belum ada data.'}
                 </p>
               </div>
 
               <div style={styles.card}>
-                <p style={styles.cardLabel}>Total Logs Bulan Ini</p>
-                <h3 style={styles.cardValue}>{loading ? '—' : incidents.length}</h3>
+                <p style={styles.cardLabel}>Total History</p>
+                <h3 style={styles.cardValue}>{loading ? '—' : notifications.length}</h3>
                 <p style={styles.cardDescription}>
-                  Total histori kejadian yang tersimpan.
+                  Total histori notifikasi monitoring yang tersimpan.
                 </p>
               </div>
             </>
@@ -322,7 +324,7 @@ export default function CustomerDashboardView() {
                 </div>
                 <div style={styles.summaryItem}>
                   <span style={styles.summaryLabel}>Last Update</span>
-                  <span style={styles.summaryValue}>{device ? timeAgo(device.lastSeen) : '—'}</span>
+                  <span style={styles.summaryValue}>{deviceLastUpdate ? timeAgo(deviceLastUpdate) : '—'}</span>
                 </div>
                 <div style={styles.summaryItem}>
                   <span style={styles.summaryLabel}>Kontak Darurat</span>
@@ -345,16 +347,16 @@ export default function CustomerDashboardView() {
                 <span style={styles.sectionBadgeAlt}>History</span>
               </div>
 
-              {recentIncidents.length === 0 ? (
+              {recentHistory.length === 0 ? (
                 <p style={styles.emptyText}>Belum ada riwayat kejadian.</p>
               ) : (
-                recentIncidents.map((inc) => (
-                  <div key={inc.id} style={styles.logItem}>
+                recentHistory.map((item) => (
+                  <div key={item.id} style={styles.logItem}>
                     <div>
-                      <p style={styles.logTitle}>{inc.description.slice(0, 50)}...</p>
-                      <p style={styles.logTime}>{formatTimestamp(inc.timestamp)}</p>
+                      <p style={styles.logTitle}>{(item.title || item.description).slice(0, 50)}...</p>
+                      <p style={styles.logTime}>{formatTimestamp(item.createdAt)}</p>
                     </div>
-                    <span style={severityStyle(inc.severity)}>{severityLabel(inc.severity)}</span>
+                    <span style={severityStyle(item.type)}>{severityLabel(item.type)}</span>
                   </div>
                 ))
               )}

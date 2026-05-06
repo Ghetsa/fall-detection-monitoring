@@ -152,9 +152,10 @@ export default function CustomerLansiaView() {
   );
   const availableDevices = devices.filter((device) => {
     const isUsedByDeviceDoc = Boolean(device.lansiaId && device.lansiaId.trim());
-    const isUsedByLansia = usedDeviceKeys.has(device.serial) || usedDeviceKeys.has(device.id);
+    const deviceKey = device.deviceId ?? device.serial ?? device.id;
+    const isUsedByLansia = usedDeviceKeys.has(deviceKey);
     const isCurrentSelection =
-      currentEditingDeviceKey === device.serial || currentEditingDeviceKey === device.id;
+      currentEditingDeviceKey === deviceKey;
 
     return isCurrentSelection || (!isUsedByDeviceDoc && !isUsedByLansia);
   });
