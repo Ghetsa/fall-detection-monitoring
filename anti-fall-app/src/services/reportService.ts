@@ -7,25 +7,15 @@ import {
   serverTimestamp,
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import { Report, ReportCategory } from '../types/report';
 
-export type ReportCategory = 'Incident' | 'Device' | 'User' | 'System';
+export type { Report, ReportCategory };
 
 type TimestampLike = {
   toDate?: () => Date;
 };
 
 type FirestoreDoc = Record<string, unknown>;
-
-export interface Report {
-  id: string;
-  title: string;
-  category: ReportCategory;
-  period: string;
-  generatedAt: unknown;
-  status: 'Completed' | 'Processing';
-  description: string;
-  data: Record<string, unknown>;
-}
 
 const COL = 'reports';
 

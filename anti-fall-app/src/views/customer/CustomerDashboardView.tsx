@@ -5,7 +5,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { getLansiaByCustomer } from '../../services/lansiaService';
 import { getDeviceByLansiaId } from '../../services/deviceService';
 import { getIncidentsByCustomer } from '../../services/incidentService';
-import { getEmergencyByCustomer } from '../../services/emergencyService';
+import { getEmergencyByCustomer } from '../../services/emergencyContactService';
 import { Lansia } from '../../types/lansia';
 import { Device } from '../../types/device';
 import { Incident } from '../../types/incident';

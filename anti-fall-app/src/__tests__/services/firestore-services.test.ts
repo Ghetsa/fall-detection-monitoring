@@ -129,14 +129,13 @@ describe('firestore services', () => {
   });
 
   it('covers device service functions', async () => {
-    jest.spyOn(lansiaService, 'getLansiaByCustomer').mockResolvedValue([{ id: 'l1' } as any]);
-
     (getDocs as jest.Mock)
       .mockResolvedValueOnce({
         docs: makeDocs([{ id: 'd1', data: { serial: 'ESP32-001' } }]),
       })
       .mockResolvedValueOnce({
-        docs: makeDocs([{ id: 'd2', data: { lansiaId: 'l1' } }]),
+        empty: false,
+        docs: makeDocs([{ id: 'd2', data: { customerId: 'c1' } }]),
       })
       .mockResolvedValueOnce({
         empty: false,
@@ -160,7 +159,7 @@ describe('firestore services', () => {
       { id: 'd1', serial: 'ESP32-001' },
     ]);
     await expect(getDevicesByCustomer('c1')).resolves.toEqual([
-      { id: 'd2', lansiaId: 'l1' },
+      { id: 'd2', customerId: 'c1' },
     ]);
     await expect(getDeviceBySerial('ESP32-001')).resolves.toEqual({
       id: 'ESP32-001',
@@ -175,11 +174,10 @@ describe('firestore services', () => {
   });
 
   it('covers emergency service functions', async () => {
-    jest.spyOn(lansiaService, 'getLansiaByCustomer').mockResolvedValue([{ id: 'l1' } as any]);
-
     (getDocs as jest.Mock)
       .mockResolvedValueOnce({
-        docs: makeDocs([{ id: 'e1', data: { lansiaId: 'l1' } }]),
+        empty: false,
+        docs: makeDocs([{ id: 'e1', data: { customerId: 'c1' } }]),
       })
       .mockResolvedValueOnce({
         empty: false,
@@ -192,7 +190,7 @@ describe('firestore services', () => {
     (addDoc as jest.Mock).mockResolvedValue({ id: 'emergency-new' });
 
     await expect(getEmergencyByCustomer('c1')).resolves.toEqual([
-      { id: 'e1', lansiaId: 'l1' },
+      { id: 'e1', customerId: 'c1' },
     ]);
     await expect(getEmergencyByLansia('l1')).resolves.toEqual({
       id: 'e2',

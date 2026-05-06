@@ -74,6 +74,8 @@ jest.mock('../../../services/reportService', () => ({
 
 jest.mock('../../../lib/reportExports', () => ({
   buildReportRows: jest.fn(() => [{ id: 1, metric: 'users', value: 10, category: 'User', period: 'April', generatedAt: 'today', status: 'Completed' }]),
+  buildReportNarrative: jest.fn(() => ({ title: 'Report', intro: 'Intro', points: [], closing: 'Done' })),
+  buildNarrativeRows: jest.fn(() => []),
   downloadExcelWorkbook: jest.fn(),
   formatReportTimestamp: jest.fn(() => '14 Apr 2026'),
   sanitizeFilenamePart: jest.fn(() => 'report'),

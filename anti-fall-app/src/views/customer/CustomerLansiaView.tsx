@@ -7,7 +7,7 @@ import {
 import { useAuth } from '../../hooks/useAuth';
 import { getLansiaByCustomer, addLansia, updateLansia, deleteLansia } from '../../services/lansiaService';
 import { getAllDevices } from '../../services/deviceService';
-import { getEmergencyByCustomer } from '../../services/emergencyService';
+import { getEmergencyByCustomer } from '../../services/emergencyContactService';
 import { Device } from '../../types/device';
 import { EmergencyContact } from '../../types/emergency';
 import { Lansia, LansiaFormData } from '../../types/lansia';

@@ -27,7 +27,13 @@ export async function getAllDevices(): Promise<Device[]> {
 }
 
 export async function getDevicesByCustomer(customerId: string): Promise<Device[]> {
-  // devices does not store customerId; derive by lansia ownership.
+  // Backward compat: legacy schema stored customerId directly in devices.
+  // Prefer this path if it returns results, then fallback to deriving from lansia ownership.
+  const legacySnap = await getDocs(query(collection(db, COL), where('customerId', '==', customerId)));
+  if (!legacySnap.empty) {
+    return legacySnap.docs.map((d) => ({ id: d.id, ...d.data() } as Device));
+  }
+
   const lansia = await getLansiaByCustomer(customerId);
   const ids = lansia.map((l) => l.id).filter(Boolean);
   if (ids.length === 0) return [];

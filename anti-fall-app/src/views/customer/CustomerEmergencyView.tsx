@@ -8,7 +8,7 @@ import {
   getEmergencyByCustomer,
   saveEmergencyContact,
   updateEmergencyContact,
-} from '../../services/emergencyService';
+} from '../../services/emergencyContactService';
 import { Lansia } from '../../types/lansia';
 import { EmergencyContact } from '../../types/emergency';
 import { useIsMobile } from '../../hooks/useIsMobile';

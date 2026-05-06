@@ -12,10 +12,47 @@ import { Incident } from '../types/incident';
 
 const COL = 'incidents';
 
+type FirestoreDoc = Record<string, unknown>;
+
+function normalizeIncident(id: string, data: FirestoreDoc): Incident {
+  const locationRaw = (data as any).location;
+  const location =
+    locationRaw && typeof locationRaw === 'object'
+      ? {
+          latitude:
+            typeof locationRaw.latitude === 'number' ? locationRaw.latitude : undefined,
+          longitude:
+            typeof locationRaw.longitude === 'number' ? locationRaw.longitude : undefined,
+          locationName:
+            typeof locationRaw.locationName === 'string' ? locationRaw.locationName : undefined,
+        }
+      : {
+          latitude:
+            typeof (data as any).latitude === 'number' ? (data as any).latitude : undefined,
+          longitude:
+            typeof (data as any).longitude === 'number' ? (data as any).longitude : undefined,
+          locationName: typeof locationRaw === 'string' ? locationRaw : undefined,
+        };
+
+  return {
+    id,
+    lansiaId: String((data as any).lansiaId ?? ''),
+    deviceId: String((data as any).deviceId ?? ''),
+    customerId: String((data as any).customerId ?? ''),
+    type: (data as any).type,
+    severity: (data as any).severity,
+    description: String((data as any).description ?? ''),
+    location,
+    timestamp: (data as any).timestamp,
+    isResolved: Boolean((data as any).isResolved ?? false),
+    resolvedAt: (data as any).resolvedAt,
+  };
+}
+
 export async function getAllIncidents(): Promise<Incident[]> {
   const q = query(collection(db, COL), orderBy('timestamp', 'desc'));
   const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Incident));
+  return snap.docs.map((d) => normalizeIncident(d.id, d.data() as FirestoreDoc));
 }
 
 export async function getIncidentsByCustomer(customerId: string): Promise<Incident[]> {
@@ -25,7 +62,7 @@ export async function getIncidentsByCustomer(customerId: string): Promise<Incide
     orderBy('timestamp', 'desc')
   );
   const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Incident));
+  return snap.docs.map((d) => normalizeIncident(d.id, d.data() as FirestoreDoc));
 }
 
 export async function getIncidentsByLansia(lansiaId: string): Promise<Incident[]> {
@@ -35,7 +72,7 @@ export async function getIncidentsByLansia(lansiaId: string): Promise<Incident[]
     orderBy('timestamp', 'desc')
   );
   const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Incident));
+  return snap.docs.map((d) => normalizeIncident(d.id, d.data() as FirestoreDoc));
 }
 
 export async function getTodayIncidents(): Promise<Incident[]> {
@@ -47,7 +84,7 @@ export async function getTodayIncidents(): Promise<Incident[]> {
     orderBy('timestamp', 'desc')
   );
   const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Incident));
+  return snap.docs.map((d) => normalizeIncident(d.id, d.data() as FirestoreDoc));
 }
 
 export async function getRecentIncidents(n: number = 5): Promise<Incident[]> {
@@ -57,5 +94,5 @@ export async function getRecentIncidents(n: number = 5): Promise<Incident[]> {
     limit(n)
   );
   const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Incident));
+  return snap.docs.map((d) => normalizeIncident(d.id, d.data() as FirestoreDoc));
 }
