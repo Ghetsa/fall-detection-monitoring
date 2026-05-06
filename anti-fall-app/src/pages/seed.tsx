@@ -226,7 +226,7 @@ const seedIncidents = async () => {
   }
 };
 
-/** 6. notifications */
+/** 6. notification */
 const seedNotifications = async () => {
   const col = collection(db, 'notifications');
 
