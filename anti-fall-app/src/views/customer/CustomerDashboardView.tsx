@@ -9,7 +9,7 @@ import { getEmergencyByCustomer } from '../../services/emergencyService';
 import { Lansia } from '../../types/lansia';
 import { Device } from '../../types/device';
 import { Incident } from '../../types/incident';
-import { Emergency } from '../../types/emergency';
+import { EmergencyContact } from '../../types/emergency';
 import { Loader } from 'lucide-react';
 import { useIsMobile } from '../../hooks/useIsMobile';
 
@@ -49,15 +49,15 @@ export default function CustomerDashboardView() {
   const [lansiaList, setLansiaList] = useState<Lansia[]>([]);
   const [device, setDevice] = useState<Device | null>(null);
   const [incidents, setIncidents] = useState<Incident[]>([]);
-  const [emergencyList, setEmergencyList] = useState<Emergency[]>([]);
+  const [emergencyList, setEmergencyList] = useState<EmergencyContact[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const getEmergencyForLansia = (lansia: Lansia | null): Emergency | null => {
+  const getEmergencyForLansia = (lansia: Lansia | null): EmergencyContact | null => {
     if (!lansia) return null;
-    if (lansia.emergencyId) {
-      return emergencyList.find((e) => e.id === lansia.emergencyId) ?? null;
+    if (lansia.emergencyContactId) {
+      return emergencyList.find((e) => e.id === lansia.emergencyContactId) ?? null;
     }
-    // Backward compat: resolve by lansiaId if lansia.emergencyId hasn't been written yet.
+    // Backward compat: resolve by lansiaId if lansia.emergencyContactId hasn't been written yet.
     return emergencyList.find((e) => e.lansiaId === lansia.id) ?? null;
   };
 
@@ -318,7 +318,7 @@ export default function CustomerDashboardView() {
                 </div>
                 <div style={styles.summaryItem}>
                   <span style={styles.summaryLabel}>Serial Device</span>
-                  <span style={styles.summaryValue}>{firstLansia?.deviceSerial ?? '—'}</span>
+                  <span style={styles.summaryValue}>{firstLansia?.deviceId ?? '—'}</span>
                 </div>
                 <div style={styles.summaryItem}>
                   <span style={styles.summaryLabel}>Last Update</span>

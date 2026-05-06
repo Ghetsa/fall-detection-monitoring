@@ -34,6 +34,7 @@ import {
   getTodayIncidents,
 } from '../../services/incidentService';
 import { addLansia, deleteLansia, getAllLansia, getLansiaByCustomer, updateLansia } from '../../services/lansiaService';
+import * as lansiaService from '../../services/lansiaService';
 import {
   getNotificationsByCustomer,
   markAllNotificationsRead,
@@ -128,12 +129,14 @@ describe('firestore services', () => {
   });
 
   it('covers device service functions', async () => {
+    jest.spyOn(lansiaService, 'getLansiaByCustomer').mockResolvedValue([{ id: 'l1' } as any]);
+
     (getDocs as jest.Mock)
       .mockResolvedValueOnce({
         docs: makeDocs([{ id: 'd1', data: { serial: 'ESP32-001' } }]),
       })
       .mockResolvedValueOnce({
-        docs: makeDocs([{ id: 'd2', data: { customerId: 'c1' } }]),
+        docs: makeDocs([{ id: 'd2', data: { lansiaId: 'l1' } }]),
       })
       .mockResolvedValueOnce({
         empty: false,
@@ -157,7 +160,7 @@ describe('firestore services', () => {
       { id: 'd1', serial: 'ESP32-001' },
     ]);
     await expect(getDevicesByCustomer('c1')).resolves.toEqual([
-      { id: 'd2', customerId: 'c1' },
+      { id: 'd2', lansiaId: 'l1' },
     ]);
     await expect(getDeviceBySerial('ESP32-001')).resolves.toEqual({
       id: 'ESP32-001',
@@ -172,9 +175,11 @@ describe('firestore services', () => {
   });
 
   it('covers emergency service functions', async () => {
+    jest.spyOn(lansiaService, 'getLansiaByCustomer').mockResolvedValue([{ id: 'l1' } as any]);
+
     (getDocs as jest.Mock)
       .mockResolvedValueOnce({
-        docs: makeDocs([{ id: 'e1', data: { customerId: 'c1' } }]),
+        docs: makeDocs([{ id: 'e1', data: { lansiaId: 'l1' } }]),
       })
       .mockResolvedValueOnce({
         empty: false,
@@ -187,7 +192,7 @@ describe('firestore services', () => {
     (addDoc as jest.Mock).mockResolvedValue({ id: 'emergency-new' });
 
     await expect(getEmergencyByCustomer('c1')).resolves.toEqual([
-      { id: 'e1', customerId: 'c1' },
+      { id: 'e1', lansiaId: 'l1' },
     ]);
     await expect(getEmergencyByLansia('l1')).resolves.toEqual({
       id: 'e2',
@@ -195,11 +200,11 @@ describe('firestore services', () => {
     });
     await expect(getEmergencyByLansia('missing')).resolves.toBeNull();
     await expect(
-      saveEmergencyContact({ customerId: 'c1', lansiaId: 'l1', contactName: 'Budi' } as any)
+      saveEmergencyContact({ lansiaId: 'l1', contactName: 'Budi', contactPhone: '08111', relationship: 'Anak', isActive: true } as any)
     ).resolves.toBe('emergency-new');
 
     await updateEmergencyContact('e1', { contactPhone: '08111' });
-    expect(updateDoc).toHaveBeenCalledWith('doc-emergency-e1', {
+    expect(updateDoc).toHaveBeenCalledWith('doc-emergencyContacts-e1', {
       contactPhone: '08111',
       updatedAt: 'server-ts',
     });

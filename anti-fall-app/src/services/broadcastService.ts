@@ -12,6 +12,27 @@ import { Broadcast } from '../types/broadcast';
 
 const COL = 'broadcasts';
 
+function toMillis(value: unknown): number {
+  if (!value) return 0;
+  if (
+    typeof value === 'object' &&
+    value !== null &&
+    'toDate' in value &&
+    typeof (value as any).toDate === 'function'
+  ) {
+    const d = (value as any).toDate();
+    return d instanceof Date ? d.getTime() : 0;
+  }
+  if (typeof value === 'object' && value !== null && 'seconds' in value) {
+    return Number((value as any).seconds ?? 0) * 1000;
+  }
+  if (typeof value === 'string' || typeof value === 'number' || value instanceof Date) {
+    const d = new Date(value as any);
+    return Number.isNaN(d.getTime()) ? 0 : d.getTime();
+  }
+  return 0;
+}
+
 export async function getAllBroadcasts(): Promise<Broadcast[]> {
   const q = query(collection(db, COL), orderBy('createdAt', 'desc'));
   const snap = await getDocs(q);
@@ -44,7 +65,7 @@ export async function getBroadcastsForRole(
   });
 
   return Array.from(map.values()).sort(
-    (a, b) => (b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0)
+    (a, b) => toMillis(b.createdAt) - toMillis(a.createdAt)
   );
 }
 

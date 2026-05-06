@@ -7,12 +7,11 @@ export interface Lansia {
   alamat: string;
   noHp: string;
   kondisiKesehatan: string;
-  deviceSerial: string;
   deviceId: string;
   status: 'Aktif' | 'Nonaktif';
   catatan: string;
-  emergencyId?: string;
-  createdAt?: any;
+  emergencyContactId?: string;
+  createdAt?: unknown;
 }
 
 export type LansiaFormData = Omit<Lansia, 'id'>;

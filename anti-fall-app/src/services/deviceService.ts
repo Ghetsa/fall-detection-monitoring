@@ -10,8 +10,16 @@ import {
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { Device } from '../types/device';
+import { getLansiaByCustomer } from './lansiaService';
 
 const COL = 'devices';
+
+function chunk<T>(items: T[], size: number): T[][] {
+  if (size <= 0) return [items];
+  const out: T[][] = [];
+  for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size));
+  return out;
+}
 
 export async function getAllDevices(): Promise<Device[]> {
   const snap = await getDocs(collection(db, COL));
@@ -19,9 +27,21 @@ export async function getAllDevices(): Promise<Device[]> {
 }
 
 export async function getDevicesByCustomer(customerId: string): Promise<Device[]> {
-  const q = query(collection(db, COL), where('customerId', '==', customerId));
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Device));
+  // devices does not store customerId; derive by lansia ownership.
+  const lansia = await getLansiaByCustomer(customerId);
+  const ids = lansia.map((l) => l.id).filter(Boolean);
+  if (ids.length === 0) return [];
+
+  const chunks = chunk(ids, 10);
+  const snaps = await Promise.all(
+    chunks.map((c) => getDocs(query(collection(db, COL), where('lansiaId', 'in', c))))
+  );
+
+  const map = new Map<string, Device>();
+  snaps.forEach((snap) => {
+    snap.docs.forEach((d) => map.set(d.id, { id: d.id, ...d.data() } as Device));
+  });
+  return Array.from(map.values());
 }
 
 export async function getDeviceBySerial(serial: string): Promise<Device | null> {

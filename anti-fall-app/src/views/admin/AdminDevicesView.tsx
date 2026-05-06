@@ -84,7 +84,6 @@ export default function AdminDevicesView() {
       await addDevice({
         serial: form.serial.trim().toUpperCase(),
         lansiaId: '',
-        customerId: '',
         batteryLevel: Number(form.batteryLevel) || 0,
         isOnline: form.isOnline,
         lastSeen: new Date(),

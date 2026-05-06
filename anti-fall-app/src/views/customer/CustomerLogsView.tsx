@@ -3,7 +3,9 @@ import DashboardLayout from '../../components/layout/DashboardLayout';
 import { AlertTriangle, BatteryWarning, CheckCheck, Loader, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { getNotificationsByCustomer, markAllNotificationsRead } from '../../services/notificationService';
+import { getLansiaByCustomer } from '../../services/lansiaService';
 import { Notification } from '../../types/notification';
+import { Lansia } from '../../types/lansia';
 import { useIsMobile } from '../../hooks/useIsMobile';
 
 function formatTimestamp(ts: unknown): string {
@@ -29,6 +31,7 @@ export default function CustomerLogsView() {
   const isMobile = useIsMobile();
   const { user } = useAuth();
   const [monitoringHistory, setMonitoringHistory] = useState<Notification[]>([]);
+  const [lansiaById, setLansiaById] = useState<Record<string, Lansia>>({});
   const [totalHistoryCount, setTotalHistoryCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [marking, setMarking] = useState(false);
@@ -38,9 +41,18 @@ export default function CustomerLogsView() {
     (async () => {
       setLoading(true);
       try {
-        const notifications = await getNotificationsByCustomer(user.uid);
+        const [notifications, lansia] = await Promise.all([
+          getNotificationsByCustomer(user.uid),
+          getLansiaByCustomer(user.uid),
+        ]);
         setMonitoringHistory(notifications);
         setTotalHistoryCount(notifications.length);
+        setLansiaById(
+          lansia.reduce<Record<string, Lansia>>((acc, item) => {
+            acc[item.id] = item;
+            return acc;
+          }, {})
+        );
       } finally {
         setLoading(false);
       }
@@ -61,6 +73,8 @@ export default function CustomerLogsView() {
       setMarking(false);
     }
   };
+
+  const getLansiaName = (lansiaId: string) => lansiaById[lansiaId]?.nama ?? '';
 
   const getIcon = (type: string) => {
     if (type === 'danger') return <AlertTriangle size={18} />;
@@ -148,9 +162,9 @@ export default function CustomerLogsView() {
 
                     <div>
                       <p style={styles.monitorTitle}>{n.title}</p>
-                      {n.lansiaName ? (
-                        <p style={styles.monitorLansia}>{n.lansiaName}</p>
-                      ) : null}
+                    {getLansiaName(n.lansiaId) ? (
+                      <p style={styles.monitorLansia}>{getLansiaName(n.lansiaId)}</p>
+                    ) : null}
                       <p style={styles.monitorDesc}>{n.description}</p>
                       <p style={styles.monitorTime}>{formatTimestamp(n.createdAt)}</p>
                     </div>

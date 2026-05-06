@@ -3,10 +3,12 @@ export interface Telemetry {
   lansiaId: string;
   deviceId: string;
   customerId: string;
-  timestamp: any;
-  latitude: number;
-  longitude: number;
-  locationName: string;
+  timestamp: unknown;
+  location: {
+    latitude: number;
+    longitude: number;
+    locationName?: string;
+  };
   batteryLevel: number;
   accelX: number;
   accelY: number;

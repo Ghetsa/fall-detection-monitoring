@@ -46,11 +46,12 @@ export default function AdminIncidentsView() {
   }, []);
 
   const filtered = incidents.filter((inc) => {
+    const locationName = inc.location?.locationName ?? '';
     const matchSearch =
       !search ||
       inc.deviceId.toLowerCase().includes(search.toLowerCase()) ||
       inc.description.toLowerCase().includes(search.toLowerCase()) ||
-      inc.location?.toLowerCase().includes(search.toLowerCase());
+      locationName.toLowerCase().includes(search.toLowerCase());
     const matchSev = filterSeverity === 'all' || inc.severity === filterSeverity;
     return matchSearch && matchSev;
   });
@@ -160,7 +161,7 @@ export default function AdminIncidentsView() {
                         <p style={{ margin: '3px 0 0', fontSize: 12, color: '#64748b', maxWidth: 220 }}>{inc.description.slice(0, 60)}…</p>
                       </td>
                       <td style={styles.td}><span style={styles.deviceBadge}>{inc.deviceId}</span></td>
-                      <td style={styles.td}>{inc.location ?? '—'}</td>
+                      <td style={styles.td}>{inc.location?.locationName ?? '—'}</td>
                       <td style={styles.td}>{formatTimestamp(inc.timestamp)}</td>
                       <td style={styles.td}>
                         <span style={inc.severity === 'danger' ? styles.levelDanger : inc.severity === 'warning' ? styles.levelWarning : styles.levelLow}>

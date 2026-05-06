@@ -9,7 +9,7 @@ import { getLansiaByCustomer, addLansia, updateLansia, deleteLansia } from '../.
 import { getAllDevices } from '../../services/deviceService';
 import { getEmergencyByCustomer } from '../../services/emergencyService';
 import { Device } from '../../types/device';
-import { Emergency } from '../../types/emergency';
+import { EmergencyContact } from '../../types/emergency';
 import { Lansia, LansiaFormData } from '../../types/lansia';
 import { useIsMobile } from '../../hooks/useIsMobile';
 
@@ -21,7 +21,6 @@ const emptyForm: LansiaFormData = {
   alamat: '',
   noHp: '',
   kondisiKesehatan: '',
-  deviceSerial: '',
   deviceId: '',
   status: 'Aktif',
   catatan: '',
@@ -31,7 +30,7 @@ export default function CustomerLansiaView() {
   const isMobile = useIsMobile();
   const { user } = useAuth();
   const [lansiaList, setLansiaList] = useState<Lansia[]>([]);
-  const [emergencyList, setEmergencyList] = useState<Emergency[]>([]);
+  const [emergencyList, setEmergencyList] = useState<EmergencyContact[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -62,9 +61,9 @@ export default function CustomerLansiaView() {
 
   useEffect(() => { loadData(); }, [loadData]);
 
-  const getEmergencyForLansia = (lansia: Lansia): Emergency | null => {
-    if (lansia.emergencyId) {
-      return emergencyList.find((e) => e.id === lansia.emergencyId) ?? null;
+  const getEmergencyForLansia = (lansia: Lansia): EmergencyContact | null => {
+    if (lansia.emergencyContactId) {
+      return emergencyList.find((e) => e.id === lansia.emergencyContactId) ?? null;
     }
 
     // Backward compat: emergency doc already stores lansiaId, so we can still resolve it.
@@ -74,7 +73,7 @@ export default function CustomerLansiaView() {
   const filtered = lansiaList.filter((l) => {
     const q = searchQuery.toLowerCase();
     return (
-      (l.nama.toLowerCase().includes(q) || l.deviceSerial.toLowerCase().includes(q)) &&
+      (l.nama.toLowerCase().includes(q) || l.deviceId.toLowerCase().includes(q)) &&
       (filterStatus === 'Semua' || l.status === filterStatus)
     );
   });
@@ -95,7 +94,6 @@ export default function CustomerLansiaView() {
       alamat: lansia.alamat,
       noHp: lansia.noHp,
       kondisiKesehatan: lansia.kondisiKesehatan,
-      deviceSerial: lansia.deviceSerial,
       deviceId: lansia.deviceId,
       status: lansia.status,
       catatan: lansia.catatan,
@@ -126,8 +124,7 @@ export default function CustomerLansiaView() {
 
     setForm((current) => ({
       ...current,
-      deviceSerial: selectedDevice?.serial ?? '',
-      deviceId: selectedDevice?.id ?? '',
+      deviceId: selectedDevice?.id ?? selectedDevice?.serial ?? '',
     }));
   };
 
@@ -145,12 +142,12 @@ export default function CustomerLansiaView() {
   const totalAktif = lansiaList.filter((l) => l.status === 'Aktif').length;
   const totalNonaktif = lansiaList.filter((l) => l.status === 'Nonaktif').length;
   const currentEditingDeviceKey = editTarget
-    ? editTarget.deviceSerial || editTarget.deviceId
-    : form.deviceSerial || form.deviceId;
+    ? editTarget.deviceId
+    : form.deviceId;
   const usedDeviceKeys = new Set(
     lansiaList
       .filter((l) => (editTarget ? l.id !== editTarget.id : true))
-      .flatMap((l) => [l.deviceSerial, l.deviceId])
+      .flatMap((l) => [l.deviceId])
       .filter(Boolean)
   );
   const availableDevices = devices.filter((device) => {
@@ -280,7 +277,7 @@ export default function CustomerLansiaView() {
                         );
                       })()}
                     </td>
-                    <td style={styles.td}><span style={styles.deviceBadge}>{lansia.deviceSerial || '—'}</span></td>
+                    <td style={styles.td}><span style={styles.deviceBadge}>{lansia.deviceId || '—'}</span></td>
                     <td style={styles.td}>
                       <span style={{ ...styles.statusBadge, backgroundColor: lansia.status === 'Aktif' ? '#dcfce7' : '#fee2e2', color: lansia.status === 'Aktif' ? '#166534' : '#b91c1c' }}>
                         {lansia.status}
@@ -342,7 +339,7 @@ export default function CustomerLansiaView() {
                     <span style={styles.inputIcon}><Cpu size={15} /></span>
                     <select
                       style={{ ...styles.input, appearance: 'none' }}
-                      value={form.deviceSerial}
+                      value={form.deviceId}
                       onChange={(e) => handleDeviceChange(e.target.value)}
                     >
                       <option value="">
@@ -433,7 +430,7 @@ export default function CustomerLansiaView() {
                   { icon: <Phone size={14} />, label: 'No. HP', value: detailTarget.noHp || '—' },
                   { icon: <AlertCircle size={14} />, label: 'Alamat', value: detailTarget.alamat || '—' },
                   { icon: <Heart size={14} />, label: 'Kondisi Kesehatan', value: detailTarget.kondisiKesehatan || '—' },
-                  { icon: <Cpu size={14} />, label: 'Serial Device', value: detailTarget.deviceSerial || '—', highlight: true },
+                  { icon: <Cpu size={14} />, label: 'Serial Device', value: detailTarget.deviceId || '—', highlight: true },
                   { icon: <User size={14} />, label: 'Kontak Darurat', value: (() => {
                     const emergency = getEmergencyForLansia(detailTarget);
                     return emergency ? `${emergency.contactName} (${emergency.contactPhone})` : '-';

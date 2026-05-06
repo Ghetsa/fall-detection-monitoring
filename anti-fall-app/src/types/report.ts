@@ -1,3 +1,5 @@
+export type ReportCategory = 'Incident' | 'Device' | 'User' | 'System';
+
 export type ReportSummary = {
   totalUsers: number;
   totalDevices: number;
@@ -6,12 +8,13 @@ export type ReportSummary = {
   monthlyReports: number;
 };
 
-export type ReportItem = {
+export interface Report {
   id: string;
   title: string;
-  category: 'Incident' | 'Device' | 'User' | 'System';
+  category: ReportCategory;
   period: string;
-  generatedAt: string;
-  status: 'Completed' | 'Processing' | 'Failed';
+  generatedAt: unknown;
+  status: 'Completed' | 'Processing';
   description: string;
-};
+  data: Record<string, unknown>;
+}

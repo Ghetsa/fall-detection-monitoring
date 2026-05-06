@@ -1,12 +1,12 @@
 import { CSSProperties } from 'react';
-import { ReportItem } from '../../types/report';
+import { Report } from '../../types/report';
 
 type ReportsTableProps = {
-  reports: ReportItem[];
+  reports: Report[];
 };
 
 export default function ReportsTable({ reports }: ReportsTableProps) {
-  const getStatusStyle = (status: ReportItem['status']): CSSProperties => {
+  const getStatusStyle = (status: Report['status']): CSSProperties => {
     if (status === 'Completed') {
       return {
         backgroundColor: '#dcfce7',
@@ -25,6 +25,22 @@ export default function ReportsTable({ reports }: ReportsTableProps) {
       backgroundColor: '#fee2e2',
       color: '#b91c1c',
     };
+  };
+
+  const formatGeneratedAt = (value: unknown) => {
+    if (!value) return 'â€”';
+    if (typeof value === 'object' && value !== null && 'toDate' in value && typeof (value as any).toDate === 'function') {
+      return (value as any).toDate().toLocaleString('id-ID');
+    }
+    if (typeof value === 'object' && value !== null && 'seconds' in value) {
+      const seconds = Number((value as any).seconds ?? 0);
+      return new Date(seconds * 1000).toLocaleString('id-ID');
+    }
+    if (typeof value === 'string' || typeof value === 'number' || value instanceof Date) {
+      const date = new Date(value as any);
+      return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString('id-ID');
+    }
+    return String(value);
   };
 
   return (
@@ -59,7 +75,7 @@ export default function ReportsTable({ reports }: ReportsTableProps) {
                 </td>
                 <td style={styles.td}>{report.category}</td>
                 <td style={styles.td}>{report.period}</td>
-                <td style={styles.td}>{report.generatedAt}</td>
+                <td style={styles.td}>{formatGeneratedAt(report.generatedAt)}</td>
                 <td style={styles.td}>
                   <span
                     style={{

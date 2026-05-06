@@ -87,9 +87,8 @@ const seedLansia = async () => {
     jenisKelamin: 'Perempuan',
     alamat: 'Jl. Raden Intan No. 12, Bandar Lampung',
     noHp: '085678901234',
-    emergencyId: EMERGENCY_ID_1,
+    emergencyContactId: EMERGENCY_ID_1,
     kondisiKesehatan: 'Hipertensi, Diabetes Tipe 2',
-    deviceSerial: DEVICE_ID_1,
     deviceId: DEVICE_ID_1,
     status: 'Aktif',
     catatan: 'Rutin kontrol tekanan darah setiap minggu.',
@@ -103,9 +102,8 @@ const seedLansia = async () => {
     jenisKelamin: 'Laki-laki',
     alamat: 'Jl. Kartini No. 5, Tanjung Karang',
     noHp: '082345678901',
-    emergencyId: EMERGENCY_ID_2,
+    emergencyContactId: EMERGENCY_ID_2,
     kondisiKesehatan: 'Osteoporosis, Rematik',
-    deviceSerial: DEVICE_ID_2,
     deviceId: DEVICE_ID_2,
     status: 'Aktif',
     catatan: 'Perlu bantuan saat berjalan di permukaan licin.',
@@ -119,9 +117,8 @@ const seedLansia = async () => {
     jenisKelamin: 'Laki-laki',
     alamat: 'Jl. Gajah Mada No. 3, Way Halim',
     noHp: '083456789012',
-    emergencyId: EMERGENCY_ID_3,
+    emergencyContactId: EMERGENCY_ID_3,
     kondisiKesehatan: 'Parkinson ringan',
-    deviceSerial: DEVICE_ID_3,
     deviceId: DEVICE_ID_3,
     status: 'Aktif',
     catatan: 'Butuh pemantauan ketat saat malam hari.',
@@ -134,7 +131,6 @@ const seedDevices = async () => {
   await setDoc(doc(db, 'devices', DEVICE_ID_1), {
     serial: DEVICE_ID_1,
     lansiaId: LANSIA_ID_1,
-    customerId: CUSTOMER_UID_1,
     batteryLevel: 87,
     isOnline: true,
     lastSeen: hoursAgo(0),
@@ -149,7 +145,6 @@ const seedDevices = async () => {
   await setDoc(doc(db, 'devices', DEVICE_ID_2), {
     serial: DEVICE_ID_2,
     lansiaId: LANSIA_ID_2,
-    customerId: CUSTOMER_UID_1,
     batteryLevel: 62,
     isOnline: true,
     lastSeen: hoursAgo(1),
@@ -164,7 +159,6 @@ const seedDevices = async () => {
   await setDoc(doc(db, 'devices', DEVICE_ID_3), {
     serial: DEVICE_ID_3,
     lansiaId: LANSIA_ID_3,
-    customerId: CUSTOMER_UID_2,
     batteryLevel: 45,
     isOnline: false,
     lastSeen: hoursAgo(6),
@@ -183,20 +177,20 @@ const seedTelemetry = async () => {
 
   const entries = [
     // LANSIA 1 – Siti Rahayu (ESP32-001)
-    { lansiaId: LANSIA_ID_1, deviceId: DEVICE_ID_1, customerId: CUSTOMER_UID_1, timestamp: hoursAgo(0), latitude: -5.4292, longitude: 105.2610, locationName: 'Bandar Lampung', batteryLevel: 87, accelX: 0.02, accelY: 0.01, accelZ: 9.80, isFallDetected: false, stepCount: 420 },
-    { lansiaId: LANSIA_ID_1, deviceId: DEVICE_ID_1, customerId: CUSTOMER_UID_1, timestamp: hoursAgo(2), latitude: -5.4295, longitude: 105.2612, locationName: 'Bandar Lampung', batteryLevel: 89, accelX: 0.03, accelY: 0.02, accelZ: 9.79, isFallDetected: false, stepCount: 210 },
-    { lansiaId: LANSIA_ID_1, deviceId: DEVICE_ID_1, customerId: CUSTOMER_UID_1, timestamp: daysAgo(1), latitude: -5.4290, longitude: 105.2605, locationName: 'Bandar Lampung', batteryLevel: 91, accelX: 4.51, accelY: 7.22, accelZ: 2.10, isFallDetected: true, stepCount: 0 },
-    { lansiaId: LANSIA_ID_1, deviceId: DEVICE_ID_1, customerId: CUSTOMER_UID_1, timestamp: daysAgo(2), latitude: -5.4292, longitude: 105.2610, locationName: 'Bandar Lampung', batteryLevel: 93, accelX: 0.01, accelY: 0.02, accelZ: 9.81, isFallDetected: false, stepCount: 634 },
-    { lansiaId: LANSIA_ID_1, deviceId: DEVICE_ID_1, customerId: CUSTOMER_UID_1, timestamp: daysAgo(3), latitude: -5.4291, longitude: 105.2611, locationName: 'Bandar Lampung', batteryLevel: 95, accelX: 0.02, accelY: 0.01, accelZ: 9.80, isFallDetected: false, stepCount: 890 },
+    { lansiaId: LANSIA_ID_1, deviceId: DEVICE_ID_1, customerId: CUSTOMER_UID_1, timestamp: hoursAgo(0), location: { latitude: -5.4292, longitude: 105.2610, locationName: 'Bandar Lampung' }, batteryLevel: 87, accelX: 0.02, accelY: 0.01, accelZ: 9.80, isFallDetected: false, stepCount: 420 },
+    { lansiaId: LANSIA_ID_1, deviceId: DEVICE_ID_1, customerId: CUSTOMER_UID_1, timestamp: hoursAgo(2), location: { latitude: -5.4295, longitude: 105.2612, locationName: 'Bandar Lampung' }, batteryLevel: 89, accelX: 0.03, accelY: 0.02, accelZ: 9.79, isFallDetected: false, stepCount: 210 },
+    { lansiaId: LANSIA_ID_1, deviceId: DEVICE_ID_1, customerId: CUSTOMER_UID_1, timestamp: daysAgo(1), location: { latitude: -5.4290, longitude: 105.2605, locationName: 'Bandar Lampung' }, batteryLevel: 91, accelX: 4.51, accelY: 7.22, accelZ: 2.10, isFallDetected: true, stepCount: 0 },
+    { lansiaId: LANSIA_ID_1, deviceId: DEVICE_ID_1, customerId: CUSTOMER_UID_1, timestamp: daysAgo(2), location: { latitude: -5.4292, longitude: 105.2610, locationName: 'Bandar Lampung' }, batteryLevel: 93, accelX: 0.01, accelY: 0.02, accelZ: 9.81, isFallDetected: false, stepCount: 634 },
+    { lansiaId: LANSIA_ID_1, deviceId: DEVICE_ID_1, customerId: CUSTOMER_UID_1, timestamp: daysAgo(3), location: { latitude: -5.4291, longitude: 105.2611, locationName: 'Bandar Lampung' }, batteryLevel: 95, accelX: 0.02, accelY: 0.01, accelZ: 9.80, isFallDetected: false, stepCount: 890 },
 
     // LANSIA 2 – Hadi Prasetyo (ESP32-002)
-    { lansiaId: LANSIA_ID_2, deviceId: DEVICE_ID_2, customerId: CUSTOMER_UID_1, timestamp: hoursAgo(1), latitude: -5.4345, longitude: 105.2580, locationName: 'Tanjung Karang', batteryLevel: 62, accelX: 0.04, accelY: 0.02, accelZ: 9.79, isFallDetected: false, stepCount: 310 },
-    { lansiaId: LANSIA_ID_2, deviceId: DEVICE_ID_2, customerId: CUSTOMER_UID_1, timestamp: daysAgo(1), latitude: -5.4347, longitude: 105.2583, locationName: 'Tanjung Karang', batteryLevel: 65, accelX: 3.90, accelY: 6.10, accelZ: 3.20, isFallDetected: true, stepCount: 0 },
-    { lansiaId: LANSIA_ID_2, deviceId: DEVICE_ID_2, customerId: CUSTOMER_UID_1, timestamp: daysAgo(4), latitude: -5.4345, longitude: 105.2580, locationName: 'Tanjung Karang', batteryLevel: 72, accelX: 0.01, accelY: 0.01, accelZ: 9.82, isFallDetected: false, stepCount: 512 },
+    { lansiaId: LANSIA_ID_2, deviceId: DEVICE_ID_2, customerId: CUSTOMER_UID_1, timestamp: hoursAgo(1), location: { latitude: -5.4345, longitude: 105.2580, locationName: 'Tanjung Karang' }, batteryLevel: 62, accelX: 0.04, accelY: 0.02, accelZ: 9.79, isFallDetected: false, stepCount: 310 },
+    { lansiaId: LANSIA_ID_2, deviceId: DEVICE_ID_2, customerId: CUSTOMER_UID_1, timestamp: daysAgo(1), location: { latitude: -5.4347, longitude: 105.2583, locationName: 'Tanjung Karang' }, batteryLevel: 65, accelX: 3.90, accelY: 6.10, accelZ: 3.20, isFallDetected: true, stepCount: 0 },
+    { lansiaId: LANSIA_ID_2, deviceId: DEVICE_ID_2, customerId: CUSTOMER_UID_1, timestamp: daysAgo(4), location: { latitude: -5.4345, longitude: 105.2580, locationName: 'Tanjung Karang' }, batteryLevel: 72, accelX: 0.01, accelY: 0.01, accelZ: 9.82, isFallDetected: false, stepCount: 512 },
 
     // LANSIA 3 – Slamet Wiyono (ESP32-003)
-    { lansiaId: LANSIA_ID_3, deviceId: DEVICE_ID_3, customerId: CUSTOMER_UID_2, timestamp: hoursAgo(6), latitude: -5.4400, longitude: 105.2700, locationName: 'Way Halim', batteryLevel: 45, accelX: 0.05, accelY: 0.03, accelZ: 9.78, isFallDetected: false, stepCount: 180 },
-    { lansiaId: LANSIA_ID_3, deviceId: DEVICE_ID_3, customerId: CUSTOMER_UID_2, timestamp: daysAgo(2), latitude: -5.4402, longitude: 105.2702, locationName: 'Way Halim', batteryLevel: 52, accelX: 0.02, accelY: 0.01, accelZ: 9.80, isFallDetected: false, stepCount: 390 },
+    { lansiaId: LANSIA_ID_3, deviceId: DEVICE_ID_3, customerId: CUSTOMER_UID_2, timestamp: hoursAgo(6), location: { latitude: -5.4400, longitude: 105.2700, locationName: 'Way Halim' }, batteryLevel: 45, accelX: 0.05, accelY: 0.03, accelZ: 9.78, isFallDetected: false, stepCount: 180 },
+    { lansiaId: LANSIA_ID_3, deviceId: DEVICE_ID_3, customerId: CUSTOMER_UID_2, timestamp: daysAgo(2), location: { latitude: -5.4402, longitude: 105.2702, locationName: 'Way Halim' }, batteryLevel: 52, accelX: 0.02, accelY: 0.01, accelZ: 9.80, isFallDetected: false, stepCount: 390 },
   ];
 
   for (const entry of entries) {
@@ -210,21 +204,21 @@ const seedIncidents = async () => {
 
   const entries = [
     // LANSIA 1 incidents
-    { lansiaId: LANSIA_ID_1, deviceId: DEVICE_ID_1, customerId: CUSTOMER_UID_1, type: 'fall_detected', severity: 'danger', description: 'Sistem mendeteksi kemungkinan lansia (Siti Rahayu) terjatuh.', location: 'Bandar Lampung', latitude: -5.4290, longitude: 105.2605, timestamp: daysAgo(1), isResolved: true, resolvedAt: daysAgo(1) },
-    { lansiaId: LANSIA_ID_1, deviceId: DEVICE_ID_1, customerId: CUSTOMER_UID_1, type: 'battery_low', severity: 'warning', description: 'Baterai device ESP32-001 turun di bawah 20%.', location: 'Bandar Lampung', latitude: -5.4292, longitude: 105.2610, timestamp: daysAgo(5), isResolved: true, resolvedAt: daysAgo(4) },
-    { lansiaId: LANSIA_ID_1, deviceId: DEVICE_ID_1, customerId: CUSTOMER_UID_1, type: 'safe', severity: 'normal', description: 'Status aman – tidak ada indikasi kejadian berbahaya.', location: 'Bandar Lampung', latitude: -5.4292, longitude: 105.2610, timestamp: daysAgo(7), isResolved: true, resolvedAt: daysAgo(7) },
-    { lansiaId: LANSIA_ID_1, deviceId: DEVICE_ID_1, customerId: CUSTOMER_UID_1, type: 'sos', severity: 'danger', description: 'Tombol SOS ditekan oleh lansia Siti Rahayu.', location: 'Bandar Lampung', latitude: -5.4291, longitude: 105.2611, timestamp: daysAgo(12), isResolved: true, resolvedAt: daysAgo(12) },
-    { lansiaId: LANSIA_ID_1, deviceId: DEVICE_ID_1, customerId: CUSTOMER_UID_1, type: 'device_offline', severity: 'warning', description: 'Perangkat ESP32-001 tidak mengirim data selama 30 menit.', location: 'Bandar Lampung', latitude: -5.4292, longitude: 105.2610, timestamp: daysAgo(15), isResolved: true, resolvedAt: daysAgo(15) },
+    { lansiaId: LANSIA_ID_1, deviceId: DEVICE_ID_1, customerId: CUSTOMER_UID_1, type: 'fall_detected', severity: 'danger', description: 'Sistem mendeteksi kemungkinan lansia (Siti Rahayu) terjatuh.', location: { latitude: -5.4290, longitude: 105.2605, locationName: 'Bandar Lampung' }, timestamp: daysAgo(1), isResolved: true, resolvedAt: daysAgo(1) },
+    { lansiaId: LANSIA_ID_1, deviceId: DEVICE_ID_1, customerId: CUSTOMER_UID_1, type: 'battery_low', severity: 'warning', description: 'Baterai device ESP32-001 turun di bawah 20%.', location: { latitude: -5.4292, longitude: 105.2610, locationName: 'Bandar Lampung' }, timestamp: daysAgo(5), isResolved: true, resolvedAt: daysAgo(4) },
+    { lansiaId: LANSIA_ID_1, deviceId: DEVICE_ID_1, customerId: CUSTOMER_UID_1, type: 'safe', severity: 'normal', description: 'Status aman – tidak ada indikasi kejadian berbahaya.', location: { latitude: -5.4292, longitude: 105.2610, locationName: 'Bandar Lampung' }, timestamp: daysAgo(7), isResolved: true, resolvedAt: daysAgo(7) },
+    { lansiaId: LANSIA_ID_1, deviceId: DEVICE_ID_1, customerId: CUSTOMER_UID_1, type: 'sos', severity: 'danger', description: 'Tombol SOS ditekan oleh lansia Siti Rahayu.', location: { latitude: -5.4291, longitude: 105.2611, locationName: 'Bandar Lampung' }, timestamp: daysAgo(12), isResolved: true, resolvedAt: daysAgo(12) },
+    { lansiaId: LANSIA_ID_1, deviceId: DEVICE_ID_1, customerId: CUSTOMER_UID_1, type: 'device_offline', severity: 'warning', description: 'Perangkat ESP32-001 tidak mengirim data selama 30 menit.', location: { latitude: -5.4292, longitude: 105.2610, locationName: 'Bandar Lampung' }, timestamp: daysAgo(15), isResolved: true, resolvedAt: daysAgo(15) },
 
     // LANSIA 2 incidents
-    { lansiaId: LANSIA_ID_2, deviceId: DEVICE_ID_2, customerId: CUSTOMER_UID_1, type: 'fall_detected', severity: 'danger', description: 'Sistem mendeteksi kemungkinan lansia (Hadi Prasetyo) terjatuh.', location: 'Tanjung Karang', latitude: -5.4347, longitude: 105.2583, timestamp: daysAgo(1), isResolved: true, resolvedAt: daysAgo(1) },
-    { lansiaId: LANSIA_ID_2, deviceId: DEVICE_ID_2, customerId: CUSTOMER_UID_1, type: 'battery_low', severity: 'warning', description: 'Baterai device ESP32-002 turun di bawah 30%.', location: 'Tanjung Karang', latitude: -5.4345, longitude: 105.2580, timestamp: daysAgo(8), isResolved: false, resolvedAt: null },
-    { lansiaId: LANSIA_ID_2, deviceId: DEVICE_ID_2, customerId: CUSTOMER_UID_1, type: 'safe', severity: 'normal', description: 'Status aman – kondisi normal terdeteksi.', location: 'Tanjung Karang', latitude: -5.4345, longitude: 105.2580, timestamp: daysAgo(10), isResolved: true, resolvedAt: daysAgo(10) },
+    { lansiaId: LANSIA_ID_2, deviceId: DEVICE_ID_2, customerId: CUSTOMER_UID_1, type: 'fall_detected', severity: 'danger', description: 'Sistem mendeteksi kemungkinan lansia (Hadi Prasetyo) terjatuh.', location: { latitude: -5.4347, longitude: 105.2583, locationName: 'Tanjung Karang' }, timestamp: daysAgo(1), isResolved: true, resolvedAt: daysAgo(1) },
+    { lansiaId: LANSIA_ID_2, deviceId: DEVICE_ID_2, customerId: CUSTOMER_UID_1, type: 'battery_low', severity: 'warning', description: 'Baterai device ESP32-002 turun di bawah 30%.', location: { latitude: -5.4345, longitude: 105.2580, locationName: 'Tanjung Karang' }, timestamp: daysAgo(8), isResolved: false, resolvedAt: null },
+    { lansiaId: LANSIA_ID_2, deviceId: DEVICE_ID_2, customerId: CUSTOMER_UID_1, type: 'safe', severity: 'normal', description: 'Status aman – kondisi normal terdeteksi.', location: { latitude: -5.4345, longitude: 105.2580, locationName: 'Tanjung Karang' }, timestamp: daysAgo(10), isResolved: true, resolvedAt: daysAgo(10) },
 
     // LANSIA 3 incidents
-    { lansiaId: LANSIA_ID_3, deviceId: DEVICE_ID_3, customerId: CUSTOMER_UID_2, type: 'device_offline', severity: 'warning', description: 'Perangkat ESP32-003 offline, mungkin kehabisan baterai.', location: 'Way Halim', latitude: -5.4400, longitude: 105.2700, timestamp: hoursAgo(6), isResolved: false, resolvedAt: null },
-    { lansiaId: LANSIA_ID_3, deviceId: DEVICE_ID_3, customerId: CUSTOMER_UID_2, type: 'battery_low', severity: 'warning', description: 'Baterai device ESP32-003 turun di bawah 50%.', location: 'Way Halim', latitude: -5.4400, longitude: 105.2700, timestamp: daysAgo(2), isResolved: false, resolvedAt: null },
-    { lansiaId: LANSIA_ID_3, deviceId: DEVICE_ID_3, customerId: CUSTOMER_UID_2, type: 'fall_detected', severity: 'danger', description: 'Terdeteksi kemungkinan jatuh pada Slamet Wiyono.', location: 'Way Halim', latitude: -5.4402, longitude: 105.2702, timestamp: daysAgo(5), isResolved: true, resolvedAt: daysAgo(5) },
+    { lansiaId: LANSIA_ID_3, deviceId: DEVICE_ID_3, customerId: CUSTOMER_UID_2, type: 'device_offline', severity: 'warning', description: 'Perangkat ESP32-003 offline, mungkin kehabisan baterai.', location: { latitude: -5.4400, longitude: 105.2700, locationName: 'Way Halim' }, timestamp: hoursAgo(6), isResolved: false, resolvedAt: null },
+    { lansiaId: LANSIA_ID_3, deviceId: DEVICE_ID_3, customerId: CUSTOMER_UID_2, type: 'battery_low', severity: 'warning', description: 'Baterai device ESP32-003 turun di bawah 50%.', location: { latitude: -5.4400, longitude: 105.2700, locationName: 'Way Halim' }, timestamp: daysAgo(2), isResolved: false, resolvedAt: null },
+    { lansiaId: LANSIA_ID_3, deviceId: DEVICE_ID_3, customerId: CUSTOMER_UID_2, type: 'fall_detected', severity: 'danger', description: 'Terdeteksi kemungkinan jatuh pada Slamet Wiyono.', location: { latitude: -5.4402, longitude: 105.2702, locationName: 'Way Halim' }, timestamp: daysAgo(5), isResolved: true, resolvedAt: daysAgo(5) },
   ];
 
   for (const entry of entries) {
@@ -238,18 +232,18 @@ const seedNotifications = async () => {
 
   const entries = [
     // Customer 1 notifications
-    { customerId: CUSTOMER_UID_1, lansiaId: LANSIA_ID_1, lansiaName: 'Siti Rahayu', title: 'Terdeteksi Jatuh!', description: 'Sistem mendeteksi kemungkinan Siti Rahayu terjatuh. Segera periksa kondisinya.', type: 'danger', isRead: false, createdAt: daysAgo(1) },
-    { customerId: CUSTOMER_UID_1, lansiaId: LANSIA_ID_2, lansiaName: 'Hadi Prasetyo', title: 'Terdeteksi Jatuh!', description: 'Sistem mendeteksi kemungkinan Hadi Prasetyo terjatuh.', type: 'danger', isRead: true, createdAt: daysAgo(1) },
-    { customerId: CUSTOMER_UID_1, lansiaId: LANSIA_ID_1, lansiaName: 'Siti Rahayu', title: 'Baterai Lemah', description: 'Baterai perangkat ESP32-001 (Siti Rahayu) mulai menipis, perlu diisi ulang.', type: 'warning', isRead: true, createdAt: daysAgo(5) },
-    { customerId: CUSTOMER_UID_1, lansiaId: LANSIA_ID_2, lansiaName: 'Hadi Prasetyo', title: 'Baterai Lemah', description: 'Baterai perangkat Hadi Prasetyo di bawah 30%.', type: 'warning', isRead: false, createdAt: daysAgo(8) },
-    { customerId: CUSTOMER_UID_1, lansiaId: LANSIA_ID_1, lansiaName: 'Siti Rahayu', title: 'Kondisi Aman', description: 'Tidak ada indikasi kejadian berbahaya pada Siti Rahayu.', type: 'safe', isRead: true, createdAt: daysAgo(7) },
-    { customerId: CUSTOMER_UID_1, lansiaId: LANSIA_ID_1, lansiaName: 'Siti Rahayu', title: 'SOS Ditekan!', description: 'Siti Rahayu menekan tombol SOS darurat. Segera hubungi beliau.', type: 'danger', isRead: true, createdAt: daysAgo(12) },
-    { customerId: CUSTOMER_UID_1, lansiaId: LANSIA_ID_1, lansiaName: 'Siti Rahayu', title: 'Perangkat Offline', description: 'ESP32-001 tidak mengirim data sejak 30 menit lalu.', type: 'warning', isRead: true, createdAt: daysAgo(15) },
+    { customerId: CUSTOMER_UID_1, lansiaId: LANSIA_ID_1, title: 'Terdeteksi Jatuh!', description: 'Sistem mendeteksi kemungkinan Siti Rahayu terjatuh. Segera periksa kondisinya.', type: 'danger', isRead: false, createdAt: daysAgo(1) },
+    { customerId: CUSTOMER_UID_1, lansiaId: LANSIA_ID_2, title: 'Terdeteksi Jatuh!', description: 'Sistem mendeteksi kemungkinan Hadi Prasetyo terjatuh.', type: 'danger', isRead: true, createdAt: daysAgo(1) },
+    { customerId: CUSTOMER_UID_1, lansiaId: LANSIA_ID_1, title: 'Baterai Lemah', description: 'Baterai perangkat ESP32-001 (Siti Rahayu) mulai menipis, perlu diisi ulang.', type: 'warning', isRead: true, createdAt: daysAgo(5) },
+    { customerId: CUSTOMER_UID_1, lansiaId: LANSIA_ID_2, title: 'Baterai Lemah', description: 'Baterai perangkat Hadi Prasetyo di bawah 30%.', type: 'warning', isRead: false, createdAt: daysAgo(8) },
+    { customerId: CUSTOMER_UID_1, lansiaId: LANSIA_ID_1, title: 'Kondisi Aman', description: 'Tidak ada indikasi kejadian berbahaya pada Siti Rahayu.', type: 'safe', isRead: true, createdAt: daysAgo(7) },
+    { customerId: CUSTOMER_UID_1, lansiaId: LANSIA_ID_1, title: 'SOS Ditekan!', description: 'Siti Rahayu menekan tombol SOS darurat. Segera hubungi beliau.', type: 'danger', isRead: true, createdAt: daysAgo(12) },
+    { customerId: CUSTOMER_UID_1, lansiaId: LANSIA_ID_1, title: 'Perangkat Offline', description: 'ESP32-001 tidak mengirim data sejak 30 menit lalu.', type: 'warning', isRead: true, createdAt: daysAgo(15) },
 
     // Customer 2 notifications
-    { customerId: CUSTOMER_UID_2, lansiaId: LANSIA_ID_3, lansiaName: 'Slamet Wiyono', title: 'Perangkat Offline', description: 'ESP32-003 tidak dapat dihubungi. Perangkat mungkin kehabisan baterai.', type: 'warning', isRead: false, createdAt: hoursAgo(6) },
-    { customerId: CUSTOMER_UID_2, lansiaId: LANSIA_ID_3, lansiaName: 'Slamet Wiyono', title: 'Baterai Lemah', description: 'Baterai Slamet Wiyono di bawah 50%.', type: 'warning', isRead: false, createdAt: daysAgo(2) },
-    { customerId: CUSTOMER_UID_2, lansiaId: LANSIA_ID_3, lansiaName: 'Slamet Wiyono', title: 'Terdeteksi Jatuh!', description: 'Sistem mendeteksi kemungkinan Slamet Wiyono terjatuh.', type: 'danger', isRead: true, createdAt: daysAgo(5) },
+    { customerId: CUSTOMER_UID_2, lansiaId: LANSIA_ID_3, title: 'Perangkat Offline', description: 'ESP32-003 tidak dapat dihubungi. Perangkat mungkin kehabisan baterai.', type: 'warning', isRead: false, createdAt: hoursAgo(6) },
+    { customerId: CUSTOMER_UID_2, lansiaId: LANSIA_ID_3, title: 'Baterai Lemah', description: 'Baterai Slamet Wiyono di bawah 50%.', type: 'warning', isRead: false, createdAt: daysAgo(2) },
+    { customerId: CUSTOMER_UID_2, lansiaId: LANSIA_ID_3, title: 'Terdeteksi Jatuh!', description: 'Sistem mendeteksi kemungkinan Slamet Wiyono terjatuh.', type: 'danger', isRead: true, createdAt: daysAgo(5) },
   ];
 
   for (const entry of entries) {
@@ -259,12 +253,8 @@ const seedNotifications = async () => {
 
 /** 7. emergency (kontak darurat per customer-lansia) */
 const seedEmergency = async () => {
-  const col = collection(db, 'emergency');
-
-  await addDoc(col, {
-    customerId: CUSTOMER_UID_1,
+  await setDoc(doc(db, 'emergencyContacts', EMERGENCY_ID_1), {
     lansiaId: LANSIA_ID_1,
-    lansiaName: 'Siti Rahayu',
     contactName: 'Budi Santoso',
     contactPhone: '081234567890',
     relationship: 'Anak',
@@ -272,10 +262,8 @@ const seedEmergency = async () => {
     updatedAt: daysAgo(25),
   });
 
-  await addDoc(col, {
-    customerId: CUSTOMER_UID_1,
+  await setDoc(doc(db, 'emergencyContacts', EMERGENCY_ID_2), {
     lansiaId: LANSIA_ID_2,
-    lansiaName: 'Hadi Prasetyo',
     contactName: 'Budi Santoso',
     contactPhone: '081234567890',
     relationship: 'Keponakan',
@@ -283,10 +271,8 @@ const seedEmergency = async () => {
     updatedAt: daysAgo(20),
   });
 
-  await addDoc(col, {
-    customerId: CUSTOMER_UID_2,
+  await setDoc(doc(db, 'emergencyContacts', EMERGENCY_ID_3), {
     lansiaId: LANSIA_ID_3,
-    lansiaName: 'Slamet Wiyono',
     contactName: 'Dewi Prasetyo',
     contactPhone: '087654321098',
     relationship: 'Anak',
@@ -337,7 +323,7 @@ const COLLECTIONS = [
   { key: 'telemetry', label: 'telemetry', desc: '10 data sensor & lokasi' },
   { key: 'incidents', label: 'incidents', desc: '11 insiden / activity logs' },
   { key: 'notifications', label: 'notifications', desc: '10 notifikasi customer' },
-  { key: 'emergency', label: 'emergency', desc: '3 data kontak darurat' },
+    { key: 'emergencyContacts', label: 'emergencyContacts', desc: '3 data kontak darurat' },
   { key: 'broadcasts', label: 'broadcasts', desc: '5 pengumuman admin' },
   { key: 'reports', label: 'reports', desc: '5 laporan sistem' },
 ];
@@ -385,34 +371,34 @@ export default function SeedPage() {
         await setDoc(doc(db, 'users', CUSTOMER_UID_2), { uid: CUSTOMER_UID_2, fullName: 'Dewi Prasetyo', email: 'dewi@gmail.com', role: 'customer', phone: '087654321098', address: 'Jl. Kartini No. 12, Tanjung Karang', createdAt: daysAgo(20) });
       },
       lansia: async () => {
-        await setDoc(doc(db, 'lansia', LANSIA_ID_1), { customerId: REAL_UID, nama: 'Siti Rahayu', usia: 72, jenisKelamin: 'Perempuan', alamat: 'Jl. Raden Intan No. 12, Bandar Lampung', noHp: '085678901234', emergencyId: EMERGENCY_ID_1, kondisiKesehatan: 'Hipertensi, Diabetes Tipe 2', deviceSerial: DEVICE_ID_1, deviceId: DEVICE_ID_1, status: 'Aktif', catatan: 'Rutin kontrol tekanan darah setiap minggu.', createdAt: daysAgo(25) });
-        await setDoc(doc(db, 'lansia', LANSIA_ID_2), { customerId: REAL_UID, nama: 'Hadi Prasetyo', usia: 68, jenisKelamin: 'Laki-laki', alamat: 'Jl. Kartini No. 5, Tanjung Karang', noHp: '082345678901', emergencyId: EMERGENCY_ID_2, kondisiKesehatan: 'Osteoporosis, Rematik', deviceSerial: DEVICE_ID_2, deviceId: DEVICE_ID_2, status: 'Aktif', catatan: 'Perlu bantuan saat berjalan di permukaan licin.', createdAt: daysAgo(20) });
-        await setDoc(doc(db, 'lansia', LANSIA_ID_3), { customerId: CUSTOMER_UID_2, nama: 'Slamet Wiyono', usia: 75, jenisKelamin: 'Laki-laki', alamat: 'Jl. Gajah Mada No. 3, Way Halim', noHp: '083456789012', emergencyId: EMERGENCY_ID_3, kondisiKesehatan: 'Parkinson ringan', deviceSerial: DEVICE_ID_3, deviceId: DEVICE_ID_3, status: 'Aktif', catatan: 'Butuh pemantauan ketat saat malam hari.', createdAt: daysAgo(10) });
+        await setDoc(doc(db, 'lansia', LANSIA_ID_1), { customerId: REAL_UID, nama: 'Siti Rahayu', usia: 72, jenisKelamin: 'Perempuan', alamat: 'Jl. Raden Intan No. 12, Bandar Lampung', noHp: '085678901234', emergencyContactId: EMERGENCY_ID_1, kondisiKesehatan: 'Hipertensi, Diabetes Tipe 2', deviceId: DEVICE_ID_1, status: 'Aktif', catatan: 'Rutin kontrol tekanan darah setiap minggu.', createdAt: daysAgo(25) });
+        await setDoc(doc(db, 'lansia', LANSIA_ID_2), { customerId: REAL_UID, nama: 'Hadi Prasetyo', usia: 68, jenisKelamin: 'Laki-laki', alamat: 'Jl. Kartini No. 5, Tanjung Karang', noHp: '082345678901', emergencyContactId: EMERGENCY_ID_2, kondisiKesehatan: 'Osteoporosis, Rematik', deviceId: DEVICE_ID_2, status: 'Aktif', catatan: 'Perlu bantuan saat berjalan di permukaan licin.', createdAt: daysAgo(20) });
+        await setDoc(doc(db, 'lansia', LANSIA_ID_3), { customerId: CUSTOMER_UID_2, nama: 'Slamet Wiyono', usia: 75, jenisKelamin: 'Laki-laki', alamat: 'Jl. Gajah Mada No. 3, Way Halim', noHp: '083456789012', emergencyContactId: EMERGENCY_ID_3, kondisiKesehatan: 'Parkinson ringan', deviceId: DEVICE_ID_3, status: 'Aktif', catatan: 'Butuh pemantauan ketat saat malam hari.', createdAt: daysAgo(10) });
       },
       devices: async () => {
-        await setDoc(doc(db, 'devices', DEVICE_ID_1), { serial: DEVICE_ID_1, lansiaId: LANSIA_ID_1, customerId: REAL_UID, batteryLevel: 87, isOnline: true, lastSeen: hoursAgo(0), firmware: 'v2.1.0', model: 'ESP32-WROOM-32', latitude: -5.4292, longitude: 105.2610, locationName: 'Bandar Lampung', createdAt: daysAgo(25) });
-        await setDoc(doc(db, 'devices', DEVICE_ID_2), { serial: DEVICE_ID_2, lansiaId: LANSIA_ID_2, customerId: REAL_UID, batteryLevel: 62, isOnline: true, lastSeen: hoursAgo(1), firmware: 'v2.1.0', model: 'ESP32-WROOM-32', latitude: -5.4345, longitude: 105.2580, locationName: 'Tanjung Karang', createdAt: daysAgo(20) });
-        await setDoc(doc(db, 'devices', DEVICE_ID_3), { serial: DEVICE_ID_3, lansiaId: LANSIA_ID_3, customerId: CUSTOMER_UID_2, batteryLevel: 45, isOnline: false, lastSeen: hoursAgo(6), firmware: 'v2.0.5', model: 'ESP32-WROOM-32', latitude: -5.4400, longitude: 105.2700, locationName: 'Way Halim', createdAt: daysAgo(10) });
+        await setDoc(doc(db, 'devices', DEVICE_ID_1), { serial: DEVICE_ID_1, lansiaId: LANSIA_ID_1, batteryLevel: 87, isOnline: true, lastSeen: hoursAgo(0), firmware: 'v2.1.0', model: 'ESP32-WROOM-32', latitude: -5.4292, longitude: 105.2610, locationName: 'Bandar Lampung', createdAt: daysAgo(25) });
+        await setDoc(doc(db, 'devices', DEVICE_ID_2), { serial: DEVICE_ID_2, lansiaId: LANSIA_ID_2, batteryLevel: 62, isOnline: true, lastSeen: hoursAgo(1), firmware: 'v2.1.0', model: 'ESP32-WROOM-32', latitude: -5.4345, longitude: 105.2580, locationName: 'Tanjung Karang', createdAt: daysAgo(20) });
+        await setDoc(doc(db, 'devices', DEVICE_ID_3), { serial: DEVICE_ID_3, lansiaId: LANSIA_ID_3, batteryLevel: 45, isOnline: false, lastSeen: hoursAgo(6), firmware: 'v2.0.5', model: 'ESP32-WROOM-32', latitude: -5.4400, longitude: 105.2700, locationName: 'Way Halim', createdAt: daysAgo(10) });
       },
       telemetry: () => seedTelemetry(),
       incidents: () => seedIncidents(),
       notifications: async () => {
         const col = collection(db, 'notifications');
         const entries = [
-          { customerId: REAL_UID, lansiaId: LANSIA_ID_1, lansiaName: 'Siti Rahayu', title: 'Terdeteksi Jatuh!', description: 'Sistem mendeteksi kemungkinan Siti Rahayu terjatuh.', type: 'danger', isRead: false, createdAt: daysAgo(1) },
-          { customerId: REAL_UID, lansiaId: LANSIA_ID_2, lansiaName: 'Hadi Prasetyo', title: 'Terdeteksi Jatuh!', description: 'Sistem mendeteksi kemungkinan Hadi Prasetyo terjatuh.', type: 'danger', isRead: true, createdAt: daysAgo(1) },
-          { customerId: REAL_UID, lansiaId: LANSIA_ID_1, lansiaName: 'Siti Rahayu', title: 'Baterai Lemah', description: 'Baterai perangkat ESP32-001 mulai menipis.', type: 'warning', isRead: true, createdAt: daysAgo(5) },
-          { customerId: REAL_UID, lansiaId: LANSIA_ID_2, lansiaName: 'Hadi Prasetyo', title: 'Baterai Lemah', description: 'Baterai Hadi Prasetyo di bawah 30%.', type: 'warning', isRead: false, createdAt: daysAgo(8) },
-          { customerId: REAL_UID, lansiaId: LANSIA_ID_1, lansiaName: 'Siti Rahayu', title: 'Kondisi Aman', description: 'Tidak ada indikasi kejadian berbahaya.', type: 'safe', isRead: true, createdAt: daysAgo(7) },
-          { customerId: REAL_UID, lansiaId: LANSIA_ID_1, lansiaName: 'Siti Rahayu', title: 'SOS Ditekan!', description: 'Siti Rahayu menekan tombol SOS darurat.', type: 'danger', isRead: true, createdAt: daysAgo(12) },
-          { customerId: CUSTOMER_UID_2, lansiaId: LANSIA_ID_3, lansiaName: 'Slamet Wiyono', title: 'Perangkat Offline', description: 'ESP32-003 tidak dapat dihubungi.', type: 'warning', isRead: false, createdAt: hoursAgo(6) },
+          { customerId: REAL_UID, lansiaId: LANSIA_ID_1, title: 'Terdeteksi Jatuh!', description: 'Sistem mendeteksi kemungkinan Siti Rahayu terjatuh.', type: 'danger', isRead: false, createdAt: daysAgo(1) },
+          { customerId: REAL_UID, lansiaId: LANSIA_ID_2, title: 'Terdeteksi Jatuh!', description: 'Sistem mendeteksi kemungkinan Hadi Prasetyo terjatuh.', type: 'danger', isRead: true, createdAt: daysAgo(1) },
+          { customerId: REAL_UID, lansiaId: LANSIA_ID_1, title: 'Baterai Lemah', description: 'Baterai perangkat ESP32-001 mulai menipis.', type: 'warning', isRead: true, createdAt: daysAgo(5) },
+          { customerId: REAL_UID, lansiaId: LANSIA_ID_2, title: 'Baterai Lemah', description: 'Baterai Hadi Prasetyo di bawah 30%.', type: 'warning', isRead: false, createdAt: daysAgo(8) },
+          { customerId: REAL_UID, lansiaId: LANSIA_ID_1, title: 'Kondisi Aman', description: 'Tidak ada indikasi kejadian berbahaya.', type: 'safe', isRead: true, createdAt: daysAgo(7) },
+          { customerId: REAL_UID, lansiaId: LANSIA_ID_1, title: 'SOS Ditekan!', description: 'Siti Rahayu menekan tombol SOS darurat.', type: 'danger', isRead: true, createdAt: daysAgo(12) },
+          { customerId: CUSTOMER_UID_2, lansiaId: LANSIA_ID_3, title: 'Perangkat Offline', description: 'ESP32-003 tidak dapat dihubungi.', type: 'warning', isRead: false, createdAt: hoursAgo(6) },
         ];
         for (const e of entries) await addDoc(col, e);
       },
-      emergency: async () => {
-        await setDoc(doc(db, 'emergency', EMERGENCY_ID_1), { customerId: REAL_UID, lansiaId: LANSIA_ID_1, lansiaName: 'Siti Rahayu', contactName: 'Budi Santoso', contactPhone: '081234567890', relationship: 'Anak', isActive: true, updatedAt: daysAgo(25) });
-        await setDoc(doc(db, 'emergency', EMERGENCY_ID_2), { customerId: REAL_UID, lansiaId: LANSIA_ID_2, lansiaName: 'Hadi Prasetyo', contactName: 'Budi Santoso', contactPhone: '081234567890', relationship: 'Keponakan', isActive: true, updatedAt: daysAgo(20) });
-        await setDoc(doc(db, 'emergency', EMERGENCY_ID_3), { customerId: CUSTOMER_UID_2, lansiaId: LANSIA_ID_3, lansiaName: 'Slamet Wiyono', contactName: 'Dewi Prasetyo', contactPhone: '087654321098', relationship: 'Anak', isActive: true, updatedAt: daysAgo(10) });
+      emergencyContacts: async () => {
+        await setDoc(doc(db, 'emergencyContacts', EMERGENCY_ID_1), { lansiaId: LANSIA_ID_1, contactName: 'Budi Santoso', contactPhone: '081234567890', relationship: 'Anak', isActive: true, updatedAt: daysAgo(25) });
+        await setDoc(doc(db, 'emergencyContacts', EMERGENCY_ID_2), { lansiaId: LANSIA_ID_2, contactName: 'Budi Santoso', contactPhone: '081234567890', relationship: 'Keponakan', isActive: true, updatedAt: daysAgo(20) });
+        await setDoc(doc(db, 'emergencyContacts', EMERGENCY_ID_3), { lansiaId: LANSIA_ID_3, contactName: 'Dewi Prasetyo', contactPhone: '087654321098', relationship: 'Anak', isActive: true, updatedAt: daysAgo(10) });
       },
       broadcasts: () => seedBroadcasts(),
       reports: () => seedReports(),

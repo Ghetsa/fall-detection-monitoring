@@ -10,14 +10,14 @@ import {
   updateEmergencyContact,
 } from '../../services/emergencyService';
 import { Lansia } from '../../types/lansia';
-import { Emergency } from '../../types/emergency';
+import { EmergencyContact } from '../../types/emergency';
 import { useIsMobile } from '../../hooks/useIsMobile';
 
 export default function CustomerEmergencyView() {
   const isMobile = useIsMobile();
   const { user } = useAuth();
   const [lansiaList, setLansiaList] = useState<Lansia[]>([]);
-  const [emergencyList, setEmergencyList] = useState<Emergency[]>([]);
+  const [emergencyList, setEmergencyList] = useState<EmergencyContact[]>([]);
   const [selectedLansiaId, setSelectedLansiaId] = useState<string>('');
   const [phone, setPhone] = useState('');
   const [contactName, setContactName] = useState('');
@@ -63,14 +63,14 @@ export default function CustomerEmergencyView() {
 
   const selectedLansia = lansiaList.find((l) => l.id === selectedLansiaId) ?? null;
 
-  // Backfill lansia.emergencyId for legacy data where the emergency doc exists
+  // Backfill lansia.emergencyContactId for legacy data where the emergency doc exists
   // but the lansia doc hasn't been linked yet.
   useEffect(() => {
     if (!selectedLansia) return;
     const existing = emergencyList.find((e) => e.lansiaId === selectedLansia.id);
     if (!existing) return;
-    if (selectedLansia.emergencyId === existing.id) return;
-    void updateLansia(selectedLansia.id, { emergencyId: existing.id });
+    if (selectedLansia.emergencyContactId === existing.id) return;
+    void updateLansia(selectedLansia.id, { emergencyContactId: existing.id });
   }, [selectedLansia, emergencyList]);
 
   const handleSave = async () => {
@@ -79,9 +79,7 @@ export default function CustomerEmergencyView() {
     try {
       const existing = emergencyList.find((e) => e.lansiaId === selectedLansiaId);
       const payload = {
-        customerId: user.uid,
         lansiaId: selectedLansiaId,
-        lansiaName: selectedLansia?.nama ?? '',
         contactName,
         contactPhone: phone,
         relationship,
@@ -90,10 +88,10 @@ export default function CustomerEmergencyView() {
       if (existing) {
         await updateEmergencyContact(existing.id, payload);
         // Keep lansia -> emergency relation explicit and consistent.
-        await updateLansia(selectedLansiaId, { emergencyId: existing.id });
+        await updateLansia(selectedLansiaId, { emergencyContactId: existing.id });
       } else {
         const emergencyId = await saveEmergencyContact(payload);
-        await updateLansia(selectedLansiaId, { emergencyId });
+        await updateLansia(selectedLansiaId, { emergencyContactId: emergencyId });
       }
       await loadData();
       setSaved(true);

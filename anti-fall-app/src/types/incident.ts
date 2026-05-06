@@ -6,10 +6,12 @@ export interface Incident {
   type: 'fall_detected' | 'battery_low' | 'safe' | 'sos' | 'device_offline';
   severity: 'danger' | 'warning' | 'normal';
   description: string;
-  location: string;
-  latitude?: number;
-  longitude?: number;
-  timestamp: any;
+  location: {
+    latitude?: number;
+    longitude?: number;
+    locationName?: string;
+  };
+  timestamp: unknown;
   isResolved: boolean;
-  resolvedAt?: any;
+  resolvedAt?: unknown;
 }

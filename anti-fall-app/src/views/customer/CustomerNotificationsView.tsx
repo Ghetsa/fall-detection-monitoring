@@ -131,7 +131,7 @@ export default function CustomerNotificationsView() {
   );
 }
 
-/* Legacy UI: moved to History page.
+/* Legacy UI removed.
 function LegacyCustomerNotificationsView() {
   const isMobile = useIsMobile();
   const { role } = useAuth();
@@ -217,7 +217,7 @@ function LegacyCustomerNotificationsView() {
 
                   <div>
                     <p style={styles.title}>{n.title}</p>
-                    {n.lansiaName && <p style={{ ...styles.desc, color: '#1d4ed8', fontSize: '12px', fontWeight: 700, margin: '2px 0' }}>{n.lansiaName}</p>}
+                    {n.lansiaId && <p style={{ ...styles.desc, color: '#1d4ed8', fontSize: '12px', fontWeight: 700, margin: '2px 0' }}>{n.lansiaId}</p>}
                     <p style={styles.desc}>{n.description}</p>
                     <p style={styles.time}>{formatTimestamp(n.createdAt)}</p>
                   </div>

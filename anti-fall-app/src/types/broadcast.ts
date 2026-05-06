@@ -6,5 +6,5 @@ export interface Broadcast {
   targetRole: 'all' | 'customer' | 'admin';
   createdBy: string;
   isActive: boolean;
-  createdAt: any;
+  createdAt: unknown;
 }
