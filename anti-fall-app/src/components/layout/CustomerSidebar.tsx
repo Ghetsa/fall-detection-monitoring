@@ -16,7 +16,7 @@ const menuItems = [
   { label: 'Kelola Lansia', href: '/customer/lansia', icon: Users },
   { label: 'Tracking', href: '/customer/tracking', icon: MapPin },
   { label: 'History', href: '/customer/logs', icon: FileText },
-  { label: 'Emergency', href: '/customer/emergency', icon: Siren },
+  { label: 'Emergency Contacts', href: '/customer/emergency', icon: Siren },
   { label: 'Notifications', href: '/customer/notifications', icon: Bell },
 ];
 

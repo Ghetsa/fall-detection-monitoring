@@ -105,8 +105,8 @@ export default function CustomerEmergencyView() {
   return (
     <DashboardLayout
       role="customer"
-      title="Emergency Setup"
-      subtitle="Pengaturan kontak darurat"
+      title="Emergency Contacts"
+      subtitle="Kelola kontak darurat untuk tiap lansia"
     >
       <section style={styles.content}>
         <div style={{ ...styles.heroCard, ...(isMobile ? styles.heroCardMobile : {}) }}>
