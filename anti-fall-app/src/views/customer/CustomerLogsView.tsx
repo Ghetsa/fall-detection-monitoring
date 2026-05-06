@@ -86,15 +86,15 @@ export default function CustomerLogsView() {
     <DashboardLayout
       role="customer"
       title="History"
-      subtitle="Riwayat monitoring device/lansia"
+      subtitle="Riwayat notifikasi monitoring & sistem"
     >
       <section style={styles.content}>
         <div style={{ ...styles.heroCard, ...(isMobile ? styles.heroCardMobile : {}) }}>
           <div>
-            <p style={styles.heroLabel}>Logs</p>
+            <p style={styles.heroLabel}>History</p>
             <h2 style={styles.heroTitle}>Riwayat Aktivitas</h2>
             <p style={styles.heroText}>
-              Semua aktivitas monitoring, alert sistem, dan kejadian device tercatat di sini.
+              Semua notifikasi monitoring, system event, dan alert insiden tercatat di sini.
             </p>
           </div>
 
@@ -105,7 +105,7 @@ export default function CustomerLogsView() {
 
         <div style={styles.monitorCard}>
           <div style={styles.monitorHeader}>
-            <h3 style={styles.sectionTitle}>Monitoring History</h3>
+            <h3 style={styles.sectionTitle}>Notification History</h3>
           </div>
 
           {unreadCount > 0 && (

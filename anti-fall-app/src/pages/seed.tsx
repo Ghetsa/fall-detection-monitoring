@@ -232,16 +232,16 @@ const seedNotifications = async () => {
 
   const entries = [
     // Customer 1 notifications
-    { customerId: CUSTOMER_UID_1, lansiaId: LANSIA_ID_1, title: 'Terdeteksi Jatuh!', description: 'Sistem mendeteksi kemungkinan Siti Rahayu terjatuh. Segera periksa kondisinya.', type: 'danger', isRead: false, createdAt: daysAgo(1) },
-    { customerId: CUSTOMER_UID_1, lansiaId: LANSIA_ID_2, title: 'Terdeteksi Jatuh!', description: 'Sistem mendeteksi kemungkinan Hadi Prasetyo terjatuh.', type: 'danger', isRead: true, createdAt: daysAgo(1) },
-    { customerId: CUSTOMER_UID_1, lansiaId: LANSIA_ID_1, title: 'Baterai Lemah', description: 'Baterai perangkat ESP32-001 (Siti Rahayu) mulai menipis, perlu diisi ulang.', type: 'warning', isRead: true, createdAt: daysAgo(5) },
-    { customerId: CUSTOMER_UID_1, lansiaId: LANSIA_ID_2, title: 'Baterai Lemah', description: 'Baterai perangkat Hadi Prasetyo di bawah 30%.', type: 'warning', isRead: false, createdAt: daysAgo(8) },
-    { customerId: CUSTOMER_UID_1, lansiaId: LANSIA_ID_1, title: 'Kondisi Aman', description: 'Tidak ada indikasi kejadian berbahaya pada Siti Rahayu.', type: 'safe', isRead: true, createdAt: daysAgo(7) },
-    { customerId: CUSTOMER_UID_1, lansiaId: LANSIA_ID_1, title: 'SOS Ditekan!', description: 'Siti Rahayu menekan tombol SOS darurat. Segera hubungi beliau.', type: 'danger', isRead: true, createdAt: daysAgo(12) },
-    { customerId: CUSTOMER_UID_1, lansiaId: LANSIA_ID_1, title: 'Perangkat Offline', description: 'ESP32-001 tidak mengirim data sejak 30 menit lalu.', type: 'warning', isRead: true, createdAt: daysAgo(15) },
+    { customerId: CUSTOMER_UID_1, lansiaId: LANSIA_ID_1, incidentId: '', title: 'Terdeteksi Jatuh!', description: 'Sistem mendeteksi kemungkinan Siti Rahayu terjatuh. Segera periksa kondisinya.', type: 'danger', isRead: false, createdAt: daysAgo(1) },
+    { customerId: CUSTOMER_UID_1, lansiaId: LANSIA_ID_2, incidentId: '', title: 'Terdeteksi Jatuh!', description: 'Sistem mendeteksi kemungkinan Hadi Prasetyo terjatuh.', type: 'danger', isRead: true, createdAt: daysAgo(1) },
+    { customerId: CUSTOMER_UID_1, lansiaId: LANSIA_ID_1, incidentId: '', title: 'Baterai Lemah', description: 'Baterai perangkat ESP32-001 (Siti Rahayu) mulai menipis, perlu diisi ulang.', type: 'warning', isRead: true, createdAt: daysAgo(5) },
+    { customerId: CUSTOMER_UID_1, lansiaId: LANSIA_ID_2, incidentId: '', title: 'Baterai Lemah', description: 'Baterai perangkat Hadi Prasetyo di bawah 30%.', type: 'warning', isRead: false, createdAt: daysAgo(8) },
+    { customerId: CUSTOMER_UID_1, lansiaId: LANSIA_ID_1, incidentId: '', title: 'Kondisi Aman', description: 'Tidak ada indikasi kejadian berbahaya pada Siti Rahayu.', type: 'safe', isRead: true, createdAt: daysAgo(7) },
+    { customerId: CUSTOMER_UID_1, lansiaId: LANSIA_ID_1, incidentId: '', title: 'SOS Ditekan!', description: 'Siti Rahayu menekan tombol SOS darurat. Segera hubungi beliau.', type: 'danger', isRead: true, createdAt: daysAgo(12) },
+    { customerId: CUSTOMER_UID_1, lansiaId: LANSIA_ID_1, incidentId: '', title: 'Perangkat Offline', description: 'ESP32-001 tidak mengirim data sejak 30 menit lalu.', type: 'warning', isRead: true, createdAt: daysAgo(15) },
 
     // Customer 2 notifications
-    { customerId: CUSTOMER_UID_2, lansiaId: LANSIA_ID_3, title: 'Perangkat Offline', description: 'ESP32-003 tidak dapat dihubungi. Perangkat mungkin kehabisan baterai.', type: 'warning', isRead: false, createdAt: hoursAgo(6) },
+    { customerId: CUSTOMER_UID_2, lansiaId: LANSIA_ID_3, incidentId: '', title: 'Perangkat Offline', description: 'ESP32-003 tidak dapat dihubungi. Perangkat mungkin kehabisan baterai.', type: 'warning', isRead: false, createdAt: hoursAgo(6) },
     { customerId: CUSTOMER_UID_2, lansiaId: LANSIA_ID_3, title: 'Baterai Lemah', description: 'Baterai Slamet Wiyono di bawah 50%.', type: 'warning', isRead: false, createdAt: daysAgo(2) },
     { customerId: CUSTOMER_UID_2, lansiaId: LANSIA_ID_3, title: 'Terdeteksi Jatuh!', description: 'Sistem mendeteksi kemungkinan Slamet Wiyono terjatuh.', type: 'danger', isRead: true, createdAt: daysAgo(5) },
   ];
@@ -382,19 +382,19 @@ export default function SeedPage() {
       },
       telemetry: () => seedTelemetry(),
       incidents: () => seedIncidents(),
-      notifications: async () => {
-        const col = collection(db, 'notifications');
-        const entries = [
-          { customerId: REAL_UID, lansiaId: LANSIA_ID_1, title: 'Terdeteksi Jatuh!', description: 'Sistem mendeteksi kemungkinan Siti Rahayu terjatuh.', type: 'danger', isRead: false, createdAt: daysAgo(1) },
-          { customerId: REAL_UID, lansiaId: LANSIA_ID_2, title: 'Terdeteksi Jatuh!', description: 'Sistem mendeteksi kemungkinan Hadi Prasetyo terjatuh.', type: 'danger', isRead: true, createdAt: daysAgo(1) },
-          { customerId: REAL_UID, lansiaId: LANSIA_ID_1, title: 'Baterai Lemah', description: 'Baterai perangkat ESP32-001 mulai menipis.', type: 'warning', isRead: true, createdAt: daysAgo(5) },
-          { customerId: REAL_UID, lansiaId: LANSIA_ID_2, title: 'Baterai Lemah', description: 'Baterai Hadi Prasetyo di bawah 30%.', type: 'warning', isRead: false, createdAt: daysAgo(8) },
-          { customerId: REAL_UID, lansiaId: LANSIA_ID_1, title: 'Kondisi Aman', description: 'Tidak ada indikasi kejadian berbahaya.', type: 'safe', isRead: true, createdAt: daysAgo(7) },
-          { customerId: REAL_UID, lansiaId: LANSIA_ID_1, title: 'SOS Ditekan!', description: 'Siti Rahayu menekan tombol SOS darurat.', type: 'danger', isRead: true, createdAt: daysAgo(12) },
-          { customerId: CUSTOMER_UID_2, lansiaId: LANSIA_ID_3, title: 'Perangkat Offline', description: 'ESP32-003 tidak dapat dihubungi.', type: 'warning', isRead: false, createdAt: hoursAgo(6) },
-        ];
-        for (const e of entries) await addDoc(col, e);
-      },
+	      notifications: async () => {
+	        const col = collection(db, 'notifications');
+	        const entries = [
+	          { customerId: REAL_UID, lansiaId: LANSIA_ID_1, incidentId: '', title: 'Terdeteksi Jatuh!', description: 'Sistem mendeteksi kemungkinan Siti Rahayu terjatuh.', type: 'danger', isRead: false, createdAt: daysAgo(1) },
+	          { customerId: REAL_UID, lansiaId: LANSIA_ID_2, incidentId: '', title: 'Terdeteksi Jatuh!', description: 'Sistem mendeteksi kemungkinan Hadi Prasetyo terjatuh.', type: 'danger', isRead: true, createdAt: daysAgo(1) },
+	          { customerId: REAL_UID, lansiaId: LANSIA_ID_1, incidentId: '', title: 'Baterai Lemah', description: 'Baterai perangkat ESP32-001 mulai menipis.', type: 'warning', isRead: true, createdAt: daysAgo(5) },
+	          { customerId: REAL_UID, lansiaId: LANSIA_ID_2, incidentId: '', title: 'Baterai Lemah', description: 'Baterai Hadi Prasetyo di bawah 30%.', type: 'warning', isRead: false, createdAt: daysAgo(8) },
+	          { customerId: REAL_UID, lansiaId: LANSIA_ID_1, incidentId: '', title: 'Kondisi Aman', description: 'Tidak ada indikasi kejadian berbahaya.', type: 'safe', isRead: true, createdAt: daysAgo(7) },
+	          { customerId: REAL_UID, lansiaId: LANSIA_ID_1, incidentId: '', title: 'SOS Ditekan!', description: 'Siti Rahayu menekan tombol SOS darurat.', type: 'danger', isRead: true, createdAt: daysAgo(12) },
+	          { customerId: CUSTOMER_UID_2, lansiaId: LANSIA_ID_3, incidentId: '', title: 'Perangkat Offline', description: 'ESP32-003 tidak dapat dihubungi.', type: 'warning', isRead: false, createdAt: hoursAgo(6) },
+	        ];
+	        for (const e of entries) await addDoc(col, e);
+	      },
       emergencyContacts: async () => {
         await setDoc(doc(db, 'emergencyContacts', EMERGENCY_ID_1), { lansiaId: LANSIA_ID_1, contactName: 'Budi Santoso', contactPhone: '081234567890', relationship: 'Anak', isActive: true, updatedAt: daysAgo(25) });
         await setDoc(doc(db, 'emergencyContacts', EMERGENCY_ID_2), { lansiaId: LANSIA_ID_2, contactName: 'Budi Santoso', contactPhone: '081234567890', relationship: 'Keponakan', isActive: true, updatedAt: daysAgo(20) });

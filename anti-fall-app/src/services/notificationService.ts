@@ -19,6 +19,7 @@ function normalizeNotification(id: string, data: FirestoreDoc): Notification {
     id,
     customerId: String((data as any).customerId ?? ''),
     lansiaId: String((data as any).lansiaId ?? ''),
+    incidentId: (data as any).incidentId ? String((data as any).incidentId) : undefined,
     title: String((data as any).title ?? ''),
     description: String((data as any).description ?? ''),
     type: (data as any).type,
